@@ -1,5 +1,5 @@
 const CONFIG = {
-  webhookUrl: "PASTE_N8N_WEBHOOK_HERE"
+  webhookUrl: "https://mlmotiv.app.n8n.cloud/webhook/marketing-miniapp-submit"
 };
 
 const tg = window.Telegram?.WebApp;
