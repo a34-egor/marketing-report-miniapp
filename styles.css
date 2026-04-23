@@ -1,4 +1,3 @@
-
 :root{
   --bg:#0f172a;
   --card:#111827;
@@ -8,11 +7,15 @@
   --line:#334155;
   --accent:#2563eb;
   --accent-2:#1d4ed8;
-  --danger:#dc2626;
-  --success:#16a34a;
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
 body{min-height:100vh}
 .app{max-width:860px;margin:0 auto;padding:16px 16px 32px}
 .header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}
@@ -25,9 +28,20 @@ h2{font-size:18px}
 .content{display:grid;gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
 label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
-input,textarea{width:100%;border:1px solid var(--line);background:var(--card-2);color:var(--text);border-radius:14px;padding:12px 14px;font-size:15px;outline:none}
+input,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--card-2);
+  color:var(--text);
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:16px;
+  outline:none;
+  -webkit-appearance:none;
+  appearance:none;
+  pointer-events:auto;
+}
 input:focus,textarea:focus{border-color:var(--accent)}
-.hint{margin:8px 0 0;color:var(--muted);font-size:13px}
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .geo-list{display:grid;gap:14px}
 .geo-item{border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.02)}
