@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Marketing Report Mini App</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="stylesheet" href="./styles.css?v=200" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <div class="eyebrow">Telegram Mini App</div>
+        <h1>Маркетинговые отчёты</h1>
+        <p class="sub" id="subTitle">Создай новый отчёт, посмотри историю и при необходимости отредактируй прошлую отправку.</p>
+      </div>
+      <div class="user-pill" id="userPill">Загрузка…</div>
+    </header>
+
+    <nav class="top-tabs" id="topTabs">
+      <button type="button" class="tab-btn active" data-view="new-report">Новый отчёт</button>
+      <button type="button" class="tab-btn" data-view="my-reports">Мои отчёты</button>
+      <button type="button" class="tab-btn hidden" data-view="admin-cycles" id="adminCyclesTab">Циклы</button>
+      <button type="button" class="tab-btn hidden" data-view="admin-history" id="adminHistoryTab">История</button>
+    </nav>
+
+    <main class="content">
+      <section id="view-new-report" class="view active">
+        <section class="card">
+          <div class="section-head">
+            <h2 id="formTitle">Новый отчёт</h2>
+            <span class="badge hidden" id="editBadge">Режим редактирования</span>
+          </div>
+
+          <label for="cycle">Цикл</label>
+          <input id="cycle" type="text" placeholder="Например: 47" />
+          <input id="editingReportKey" type="hidden" />
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>GEO</h2>
+            <button id="addGeoBtn" type="button" class="btn btn-secondary">+ Добавить GEO</button>
+          </div>
+          <div id="geoList" class="geo-list"></div>
+        </section>
+
+        <section class="card totals">
+          <h2>Итоги</h2>
+          <div class="totals-grid">
+            <div><span>GEO</span><strong id="totalGeo">0</strong></div>
+            <div><span>Расход</span><strong id="totalSpend">0$</strong></div>
+            <div><span>ПДП</span><strong id="totalPdp">0</strong></div>
+            <div><span>Средняя цена за ПДП</span><strong id="totalAvg">0$</strong></div>
+          </div>
+        </section>
+
+        <section class="card actions">
+          <button id="resetBtn" type="button" class="btn btn-ghost">Сбросить</button>
+          <button id="previewBtn" type="button" class="btn btn-secondary">Предпросмотр</button>
+          <button id="submitBtn" type="button" class="btn btn-primary">Отправить</button>
+        </section>
+      </section>
+
+      <section id="view-my-reports" class="view">
+        <section class="card">
+          <div class="section-head">
+            <h2>Мои отчёты</h2>
+            <button id="refreshMyReportsBtn" type="button" class="btn btn-secondary">Обновить</button>
+          </div>
+          <div id="myReportsList" class="list-wrap">
+            <div class="empty-state">Загрузка…</div>
+          </div>
+        </section>
+      </section>
+
+      <section id="view-admin-cycles" class="view">
+        <section class="card">
+          <div class="section-head">
+            <h2>Циклы</h2>
+            <button id="refreshAdminCyclesBtn" type="button" class="btn btn-secondary">Обновить</button>
+          </div>
+          <div id="adminCyclesList" class="list-wrap">
+            <div class="empty-state">Загрузка…</div>
+          </div>
+        </section>
+      </section>
+
+      <section id="view-admin-history" class="view">
+        <section class="card">
+          <div class="section-head">
+            <h2>История изменений</h2>
+            <button id="refreshAdminHistoryBtn" type="button" class="btn btn-secondary">Обновить</button>
+          </div>
+          <div id="adminHistoryList" class="list-wrap">
+            <div class="empty-state">Загрузка…</div>
+          </div>
+        </section>
+      </section>
+
+      <section id="previewCard" class="card preview hidden">
+        <div class="section-head">
+          <h2>Предпросмотр</h2>
+          <button id="closePreviewBtn" type="button" class="btn btn-ghost">Закрыть</button>
+        </div>
+        <pre id="previewText"></pre>
+      </section>
+
+      <section id="statusCard" class="card status hidden">
+        <div id="statusText"></div>
+      </section>
+    </main>
+  </div>
+
+  <template id="geoTemplate">
+    <article class="geo-item">
+      <div class="geo-top">
+        <div class="geo-title">GEO <span class="geo-number"></span></div>
+        <button type="button" class="remove-geo btn btn-ghost">Удалить</button>
+      </div>
+
+      <label>GEO</label>
+      <input class="geo-input" type="text" placeholder="Например: Сингапур / SG / 🇸🇬" />
+
+      <div class="grid-2">
+        <div>
+          <label>Расход</label>
+          <input class="spend-input" type="text" inputmode="decimal" placeholder="Например: 2000" />
+        </div>
+        <div>
+          <label>Количество ПДП</label>
+          <input class="pdp-input" type="text" inputmode="decimal" placeholder="Например: 40" />
+        </div>
+      </div>
+
+      <div class="readonly-row">
+        <span>Цена за ПДП</span>
+        <strong class="avg-output">0$</strong>
+      </div>
+
+      <label>План на следующий цикл</label>
+      <textarea class="plan-input" rows="3" placeholder="Например: масштабировать связку"></textarea>
+    </article>
+  </template>
+
+  <script src="./app.js?v=200"></script>
+</body>
+</html>
