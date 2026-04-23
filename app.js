@@ -203,9 +203,9 @@ async function submitReport() {
     hideStatus();
     const payload = buildPayload();
 
-    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes("PASTE_N8N_WEBHOOK_HERE")) {
-      throw new Error("В app.js не указан webhookUrl");
-    }
+    if (!CONFIG.webhookUrl) {
+  throw new Error("В app.js не указан webhookUrl");
+}
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Отправляем…";
