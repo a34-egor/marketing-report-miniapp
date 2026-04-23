@@ -203,7 +203,7 @@ async function submitReport() {
     hideStatus();
     const payload = buildPayload();
 
-    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes("https://mlmotiv.app.n8n.cloud/webhook/marketing-miniapp-submit")) {
+    if (!CONFIG.webhookUrl || CONFIG.webhookUrl.includes("PASTE_N8N_WEBHOOK_HERE")) {
       throw new Error("В app.js не указан webhookUrl");
     }
 
