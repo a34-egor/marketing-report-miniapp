@@ -212,7 +212,9 @@ async function submitReport() {
 
     const response = await fetch(CONFIG.webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8"
+      },
       body: JSON.stringify(payload)
     });
 
