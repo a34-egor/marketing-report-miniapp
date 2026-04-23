@@ -62,7 +62,7 @@ async function submitForm() {
   console.log("Sending payload:", payload);
 
   try {
-    const response = await fetch("PASTE_YOUR_N8N_WEBHOOK_URL_HERE", {
+    const response = await fetch("https://mlmotiv.app.n8n.cloud/webhook-test/marketing-miniapp-submit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
