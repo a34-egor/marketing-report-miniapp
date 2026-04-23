@@ -1,5 +1,6 @@
 const CONFIG = {
-  webhookUrl: "https://mlmotiv.app.n8n.cloud/webhook/marketing-miniapp-submit"
+  submitWebhookUrl: "https://mlmotiv.app.n8n.cloud/webhook/marketing-miniapp-submit",
+  apiWebhookUrl: "PASTE_API_WEBHOOK_HERE"
 };
 
 const tg = window.Telegram?.WebApp;
@@ -8,240 +9,133 @@ if (tg) {
   try { tg.expand(); } catch {}
 }
 
-const userPill = document.getElementById("userPill");
+let editMode = false;
+let currentReportKey = null;
+
 const cycleInput = document.getElementById("cycle");
 const geoList = document.getElementById("geoList");
 const addGeoBtn = document.getElementById("addGeoBtn");
-const previewBtn = document.getElementById("previewBtn");
 const submitBtn = document.getElementById("submitBtn");
-const previewCard = document.getElementById("previewCard");
-const closePreviewBtn = document.getElementById("closePreviewBtn");
-const previewText = document.getElementById("previewText");
-const statusCard = document.getElementById("statusCard");
-const statusText = document.getElementById("statusText");
-const totalGeo = document.getElementById("totalGeo");
-const totalSpend = document.getElementById("totalSpend");
-const totalPdp = document.getElementById("totalPdp");
-const totalAvg = document.getElementById("totalAvg");
-const geoTemplate = document.getElementById("geoTemplate");
+const myReportsContainer = document.getElementById("myReports");
 
-const initUser = tg?.initDataUnsafe?.user || null;
-userPill.textContent = initUser
-  ? `${initUser.first_name || ""} ${initUser.last_name || ""}`.trim() || `@${initUser.username || initUser.id}`
-  : "Telegram user";
-
-function parseAmount(raw) {
-  const cleaned = String(raw || "")
-    .replace(/\s+/g, "")
-    .replace(/,/g, ".")
-    .replace(/[^\d.-]/g, "");
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : 0;
+function parseAmount(val) {
+  return Number(String(val).replace(/\s/g,'').replace(',','.')) || 0;
 }
 
-function formatMoney(value) {
-  const n = Number(value || 0);
-  if (Number.isInteger(n)) return `${n}$`;
-  return `${n.toFixed(2).replace(/\.?0+$/, "")}$`;
-}
-
-function calcAvg(spend, pdp) {
-  const s = parseAmount(spend);
-  const p = parseAmount(pdp);
-  return p > 0 ? s / p : 0;
-}
-
-function showStatus(message, isError = false) {
-  statusCard.classList.remove("hidden");
-  statusCard.classList.toggle("error", isError);
-  statusText.textContent = message;
-}
-
-function hideStatus() {
-  statusCard.classList.add("hidden");
-  statusCard.classList.remove("error");
-  statusText.textContent = "";
-}
-
-function renumberGeo() {
-  [...geoList.querySelectorAll(".geo-item")].forEach((item, index) => {
-    item.querySelector(".geo-number").textContent = String(index + 1);
-  });
-}
-
-function collectItems(strict = true) {
-  const rows = [...geoList.querySelectorAll(".geo-item")];
-  return rows
-    .map((row, index) => {
-      const geo = row.querySelector(".geo-input").value.trim();
-      const spendRaw = row.querySelector(".spend-input").value.trim();
-      const pdpRaw = row.querySelector(".pdp-input").value.trim();
-      const plan = row.querySelector(".plan-input").value.trim();
-
-      const spend = parseAmount(spendRaw);
-      const pdp = parseAmount(pdpRaw);
-      const avg_pdp_cost = calcAvg(spendRaw, pdpRaw);
-
-      if (strict) {
-        if (!geo) throw new Error(`Заполни GEO в блоке ${index + 1}`);
-        if (!spendRaw || spend <= 0) throw new Error(`Заполни корректный расход в блоке ${index + 1}`);
-        if (!pdpRaw || pdp <= 0) throw new Error(`Заполни корректное количество ПДП в блоке ${index + 1}`);
-        if (!plan) throw new Error(`Заполни план в блоке ${index + 1}`);
-      }
-
-      return { geo, spend, pdp, avg_pdp_cost, next_cycle_plan: plan };
-    })
-    .filter(item => item.geo || item.spend || item.pdp || item.next_cycle_plan);
-}
-
-function updateTotals() {
-  const items = collectItems(false);
-  const spend = items.reduce((acc, i) => acc + Number(i.spend || 0), 0);
-  const pdp = items.reduce((acc, i) => acc + Number(i.pdp || 0), 0);
-  const avg = pdp > 0 ? spend / pdp : 0;
-
-  totalGeo.textContent = String(items.length);
-  totalSpend.textContent = formatMoney(spend);
-  totalPdp.textContent = String(pdp);
-  totalAvg.textContent = formatMoney(avg);
-}
-
-function attachGeoRowEvents(row) {
-  const spendInput = row.querySelector(".spend-input");
-  const pdpInput = row.querySelector(".pdp-input");
-  const avgOutput = row.querySelector(".avg-output");
-  const removeBtn = row.querySelector(".remove-geo");
-
-  function refresh() {
-    avgOutput.textContent = formatMoney(calcAvg(spendInput.value, pdpInput.value));
-    updateTotals();
-  }
-
-  spendInput.addEventListener("input", refresh);
-  pdpInput.addEventListener("input", refresh);
-  row.querySelector(".geo-input").addEventListener("input", refresh);
-  row.querySelector(".plan-input").addEventListener("input", refresh);
-
-  removeBtn.addEventListener("click", () => {
-    row.remove();
-    renumberGeo();
-    updateTotals();
-  });
-
-  refresh();
+function formatMoney(v) {
+  return Number(v).toFixed(2).replace(/\.00$/,'') + "$";
 }
 
 function addGeoRow(data = {}) {
-  const fragment = geoTemplate.content.cloneNode(true);
-  const row = fragment.querySelector(".geo-item");
-  row.querySelector(".geo-input").value = data.geo || "";
-  row.querySelector(".spend-input").value = data.spend || "";
-  row.querySelector(".pdp-input").value = data.pdp || "";
-  row.querySelector(".plan-input").value = data.next_cycle_plan || "";
-  geoList.appendChild(fragment);
+  const div = document.createElement("div");
+  div.className = "geo-item";
 
-  const inserted = geoList.lastElementChild;
-  attachGeoRowEvents(inserted);
-  renumberGeo();
-  updateTotals();
+  div.innerHTML = `
+    <input class="geo" placeholder="GEO" value="${data.geo || ''}">
+    <input class="spend" placeholder="Расход" value="${data.spend || ''}">
+    <input class="pdp" placeholder="ПДП" value="${data.pdp || ''}">
+    <textarea class="plan" placeholder="План">${data.next_cycle_plan || ''}</textarea>
+    <button class="remove">Удалить</button>
+  `;
+
+  div.querySelector(".remove").onclick = () => div.remove();
+
+  geoList.appendChild(div);
+}
+
+addGeoBtn.onclick = () => addGeoRow();
+
+function collectItems() {
+  return [...document.querySelectorAll(".geo-item")].map(el => {
+    return {
+      geo: el.querySelector(".geo").value,
+      spend: parseAmount(el.querySelector(".spend").value),
+      pdp: parseAmount(el.querySelector(".pdp").value),
+      next_cycle_plan: el.querySelector(".plan").value
+    };
+  });
 }
 
 function buildPayload() {
-  const cycle = cycleInput.value.trim();
-  if (!cycle) throw new Error("Заполни цикл");
-
-  const items = collectItems(true);
-  if (!items.length) throw new Error("Добавь хотя бы один GEO");
-
   return {
-    source: "github-pages-miniapp",
-    telegram_init_data: tg?.initData || "",
-    telegram_id: initUser?.id ? String(initUser.id) : "",
-    username: initUser?.username || "",
-    first_name: initUser?.first_name || "",
-    last_name: initUser?.last_name || "",
-    marketer: `${initUser?.first_name || ""} ${initUser?.last_name || ""}`.trim() || initUser?.username || "",
-    cycle,
-    items
+    telegram_id: tg?.initDataUnsafe?.user?.id,
+    username: tg?.initDataUnsafe?.user?.username,
+    cycle: cycleInput.value,
+    report_key: currentReportKey,
+    items: collectItems()
   };
 }
 
-function renderPreview() {
-  try {
-    const payload = buildPayload();
-    const totalSpendValue = payload.items.reduce((acc, i) => acc + i.spend, 0);
-    const totalPdpValue = payload.items.reduce((acc, i) => acc + i.pdp, 0);
-    const totalAvgValue = totalPdpValue > 0 ? totalSpendValue / totalPdpValue : 0;
+async function submit() {
+  const payload = buildPayload();
 
-    const text = [
-      `Цикл: ${payload.cycle}`,
-      "",
-      ...payload.items.flatMap((item, idx) => [
-        `#${idx + 1} ${item.geo}`,
-        `Расход: ${formatMoney(item.spend)}`,
-        `ПДП: ${item.pdp}`,
-        `Цена за ПДП: ${formatMoney(item.avg_pdp_cost)}`,
-        `План: ${item.next_cycle_plan}`,
-        ""
-      ]),
-      `Итого GEO: ${payload.items.length}`,
-      `Итого расход: ${formatMoney(totalSpendValue)}`,
-      `Итого ПДП: ${totalPdpValue}`,
-      `Средняя цена за ПДП: ${formatMoney(totalAvgValue)}`
-    ].join("\n");
+  const url = editMode ? CONFIG.apiWebhookUrl : CONFIG.submitWebhookUrl;
 
-    previewText.textContent = text;
-    previewCard.classList.remove("hidden");
-    hideStatus();
-  } catch (err) {
-    showStatus(err.message || "Не удалось собрать предпросмотр", true);
-  }
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({
+      action: editMode ? "save_report_edit" : "submit_report",
+      ...payload
+    })
+  });
+
+  alert("Сохранено");
+  loadReports();
 }
 
-async function submitReport() {
-  try {
-    hideStatus();
-    const payload = buildPayload();
+submitBtn.onclick = submit;
 
-    if (!CONFIG.webhookUrl) {
-  throw new Error("В app.js не указан webhookUrl");
+async function loadReports() {
+  const res = await fetch(CONFIG.apiWebhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({
+      action: "get_my_reports",
+      telegram_id: tg?.initDataUnsafe?.user?.id
+    })
+  });
+
+  const data = await res.json();
+
+  myReportsContainer.innerHTML = "";
+
+  data.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "report-card";
+
+    div.innerHTML = `
+      <b>Цикл ${r.cycle}</b><br>
+      Расход: ${formatMoney(r.total_spend)}<br>
+      ПДП: ${r.total_pdp}<br>
+      <button>Открыть</button>
+    `;
+
+    div.querySelector("button").onclick = () => openReport(r.report_key);
+
+    myReportsContainer.appendChild(div);
+  });
 }
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Отправляем…";
+async function openReport(report_key) {
+  const res = await fetch(CONFIG.apiWebhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({
+      action: "get_report_details",
+      report_key
+    })
+  });
 
-    const response = await fetch(CONFIG.webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8"
-      },
-      body: JSON.stringify(payload)
-    });
+  const data = await res.json();
 
-    const raw = await response.text();
-    let data = {};
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch {
-      data = { raw };
-    }
+  editMode = true;
+  currentReportKey = report_key;
 
-    if (!response.ok) {
-      throw new Error(data.message || `Ошибка webhook: ${response.status}`);
-    }
+  cycleInput.value = data.cycle;
+  geoList.innerHTML = "";
 
-    showStatus(data.message || "Отчёт успешно отправлен");
-  } catch (err) {
-    showStatus(err.message || "Не удалось отправить отчёт", true);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Отправить";
-  }
+  data.items.forEach(i => addGeoRow(i));
 }
 
-addGeoBtn.addEventListener("click", () => addGeoRow());
-previewBtn.addEventListener("click", renderPreview);
-closePreviewBtn.addEventListener("click", () => previewCard.classList.add("hidden"));
-submitBtn.addEventListener("click", submitReport);
-
-addGeoRow();
+loadReports();
