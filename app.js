@@ -16,8 +16,7 @@ const state = {
   first_name: "",
   last_name: "",
   editMode: false,
-  currentReportKey: null,
-  statusTimer: null
+  currentReportKey: null
 };
 
 const $ = (id) => document.getElementById(id);
@@ -49,8 +48,7 @@ const els = {
   previewCard: $("previewCard"),
   previewText: $("previewText"),
   closePreviewBtn: $("closePreviewBtn"),
-  statusCard: $("statusCard"),
-  statusText: $("statusText")
+  toastContainer: $("toastContainer")
 };
 
 function parseAmount(value) {
@@ -87,12 +85,15 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function showStatus(message, isError) {
-  clearTimeout(state.statusTimer);
-  els.statusCard.classList.remove("hidden", "error");
-  if (isError) els.statusCard.classList.add("error");
-  els.statusText.textContent = message;
-  state.statusTimer = setTimeout(() => els.statusCard.classList.add("hidden"), 4000);
+function showToast(message, type = "info") {
+  const toast = document.createElement("div");
+  toast.className = "toast" + (type === "error" ? " toast-error" : type === "success" ? " toast-success" : "");
+  toast.textContent = message;
+  els.toastContainer.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("out");
+    setTimeout(() => toast.remove(), 200);
+  }, 3500);
 }
 
 function readTelegramUser() {
@@ -275,8 +276,8 @@ function validateForm() {
 
 async function submitForm() {
   const error = validateForm();
-  if (error) return showStatus(error, true);
-  if (!state.telegram_id) return showStatus("Не удалось определить Telegram ID — открой форму через Telegram", true);
+  if (error) return showToast(error, "error");
+  if (!state.telegram_id) return showToast("Не удалось определить Telegram ID — открой форму через Telegram", "error");
 
   const payload = {
     telegram_id: state.telegram_id,
@@ -294,14 +295,14 @@ async function submitForm() {
       ? await apiCall("save_report_edit", payload)
       : await submitNewReport(payload);
     if (result && result.ok === false) {
-      showStatus(result.message || "Не удалось сохранить", true);
+      showToast(result.message || "Не удалось сохранить", "error");
     } else {
-      showStatus(state.editMode ? "Изменения сохранены" : "Отчёт отправлен");
+      showToast(state.editMode ? "Изменения сохранены" : "Отчёт отправлен", "success");
       resetForm();
       switchTab("my-reports");
     }
   } catch (e) {
-    showStatus(`Ошибка отправки: ${e.message}`, true);
+    showToast(`Ошибка отправки: ${e.message}`, "error");
   } finally {
     els.submitBtn.disabled = false;
   }
@@ -351,7 +352,7 @@ async function openReportForEdit(reportKey) {
   try {
     const data = await apiCall("get_report_details", { report_key: reportKey });
     if (!data || data.ok === false) {
-      showStatus(data?.message || "Отчёт не найден", true);
+      showToast(data?.message || "Отчёт не найден", "error");
       return;
     }
     els.cycle.value = data.cycle || "";
@@ -363,7 +364,7 @@ async function openReportForEdit(reportKey) {
     switchTab("new-report");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e) {
-    showStatus(`Ошибка загрузки: ${e.message}`, true);
+    showToast(`Ошибка загрузки: ${e.message}`, "error");
   }
 }
 
