@@ -125,7 +125,10 @@ async function apiCall(action, extra = {}) {
     body
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  const text = await res.text();
+  if (!text.trim()) return [];
+  try { return JSON.parse(text); }
+  catch { return []; }
 }
 
 async function submitNewReport(payload) {
@@ -308,7 +311,7 @@ async function loadMyReports() {
   els.myReportsList.innerHTML = '<div class="empty-state">Загрузка…</div>';
   try {
     const data = await apiCall("get_my_reports");
-    const rows = Array.isArray(data) ? data : [];
+    const rows = Array.isArray(data?.reports) ? data.reports : (Array.isArray(data) ? data : []);
     renderMyReports(rows);
   } catch (e) {
     els.myReportsList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
@@ -372,7 +375,7 @@ async function loadAdminCycles() {
       els.adminCyclesList.innerHTML = `<div class="empty-state">${escapeHtml(data.message || "Нет доступа")}</div>`;
       return;
     }
-    const rows = Array.isArray(data) ? data : [];
+    const rows = Array.isArray(data?.cycles) ? data.cycles : (Array.isArray(data) ? data : []);
     renderAdminCycles(rows);
   } catch (e) {
     els.adminCyclesList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
@@ -412,7 +415,7 @@ async function loadAdminHistory() {
       els.adminHistoryList.innerHTML = `<div class="empty-state">${escapeHtml(data.message || "Нет доступа")}</div>`;
       return;
     }
-    const rows = Array.isArray(data) ? data : [];
+    const rows = Array.isArray(data?.history) ? data.history : (Array.isArray(data) ? data : []);
     renderAdminHistory(rows);
   } catch (e) {
     els.adminHistoryList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
