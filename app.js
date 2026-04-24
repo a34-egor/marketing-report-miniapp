@@ -206,7 +206,12 @@ function addGeoRow(data = {}) {
   fields.geoInput.value = data.geo || "";
   fields.spendInput.value = data.spend != null && data.spend !== "" ? formatNumber(data.spend) : "";
   fields.pdpInput.value = data.pdp != null && data.pdp !== "" ? formatNumber(data.pdp) : "";
-  fields.planInput.value = data.next_cycle_plan || data.plan || "";
+  const planText = data.next_cycle_plan || data.plan || "";
+  fields.planInput.value = planText;
+  if (planText) {
+    const details = row.querySelector(".plan-details");
+    if (details) details.open = true;
+  }
 
   els.geoList.appendChild(row);
   renumberGeoRows();
@@ -258,7 +263,7 @@ function resetForm() {
 function buildPreview() {
   const cycle = els.cycle.value.trim() || "—";
   const items = collectItems();
-  const lines = [`Цикл: ${cycle}`, `GEO: ${items.length}`, ""];
+  const lines = [`Цикл: ${cycle}`, `ГЕО: ${items.length}`, ""];
   items.forEach((it, i) => {
     const avg = it.pdp > 0 ? formatMoney(it.spend / it.pdp) : "0$";
     lines.push(`${i + 1}. ${it.geo || "—"}`);
@@ -277,9 +282,9 @@ function validateForm() {
   const cycle = els.cycle.value.trim();
   if (!cycle) return "Укажи номер цикла";
   const items = collectItems();
-  if (!items.length) return "Добавь хотя бы одно GEO";
+  if (!items.length) return "Добавь хотя бы одно ГЕО";
   const bad = items.findIndex(it => !it.geo);
-  if (bad >= 0) return `В строке ${bad + 1} не указано GEO`;
+  if (bad >= 0) return `В строке ${bad + 1} не указано ГЕО`;
   return null;
 }
 
@@ -421,7 +426,7 @@ function renderAdminCycles(rows) {
         <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
         <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong></div>
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
-        <div class="kpi"><span>GEO</span><strong>${Number(r.total_geo) || 0}</strong></div>
+        <div class="kpi"><span>ГЕО</span><strong>${Number(r.total_geo) || 0}</strong></div>
       </div>
     `;
     els.adminCyclesList.appendChild(card);
@@ -455,7 +460,7 @@ function renderAdminHistory(rows) {
     card.innerHTML = `
       <div class="section-head">
         <h3>Цикл ${escapeHtml(r.cycle)}</h3>
-        <span class="badge">${Number(r.total_geo) || 0} GEO</span>
+        <span class="badge">${Number(r.total_geo) || 0} ГЕО</span>
       </div>
       <div class="meta-row">
         <span>${escapeHtml(r.marketer || r.username || r.telegram_id || "—")}</span>

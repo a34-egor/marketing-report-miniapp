@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Marketing Report</title>
   <meta name="theme-color" content="#0a0f1c" />
-  <link rel="stylesheet" href="./styles.css?v=204" />
+  <link rel="stylesheet" href="./styles.css?v=205" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -42,7 +42,7 @@
 
         <section class="card">
           <div class="section-head">
-            <h2>GEO</h2>
+            <h2>ГЕО</h2>
             <button id="addGeoBtn" type="button" class="btn btn-secondary btn-sm">+ Добавить</button>
           </div>
           <div id="geoList" class="geo-list"></div>
@@ -51,7 +51,7 @@
         <section class="card totals">
           <h2>Итоги</h2>
           <div class="totals-grid">
-            <div><span>GEO</span><strong id="totalGeo">0</strong></div>
+            <div><span>ГЕО</span><strong id="totalGeo">0</strong></div>
             <div><span>Расход</span><strong id="totalSpend">0$</strong></div>
             <div><span>ПДП</span><strong id="totalPdp">0</strong></div>
             <div><span>Средняя цена ПДП</span><strong id="totalAvg">0$</strong></div>
@@ -114,38 +114,33 @@
   <template id="geoTemplate">
     <article class="geo-item">
       <div class="geo-top">
-        <div class="geo-title"><span class="geo-number">#1</span>GEO</div>
-        <button type="button" class="remove-geo btn btn-danger-ghost btn-sm">Удалить</button>
+        <span class="geo-number">#1</span>
+        <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
+        <button type="button" class="remove-geo btn-icon-close" aria-label="Удалить">×</button>
       </div>
 
-      <div>
-        <label>Название</label>
-        <input class="geo-input" type="text" placeholder="Например: Сингапур / SG / 🇸🇬" />
-      </div>
-
-      <div class="grid-2">
-        <div>
+      <div class="geo-metrics">
+        <div class="geo-metric">
           <label>Расход</label>
           <input class="spend-input" type="text" inputmode="decimal" placeholder="2000" />
         </div>
-        <div>
+        <div class="geo-metric">
           <label>ПДП</label>
           <input class="pdp-input" type="text" inputmode="decimal" placeholder="40" />
         </div>
+        <div class="geo-metric geo-metric-readonly">
+          <label>Ц/ПДП</label>
+          <div class="avg-output">0$</div>
+        </div>
       </div>
 
-      <div class="readonly-row">
-        <span>Цена за ПДП</span>
-        <strong class="avg-output">0$</strong>
-      </div>
-
-      <div>
-        <label>План на следующий цикл</label>
+      <details class="plan-details">
+        <summary>План на следующий цикл</summary>
         <textarea class="plan-input" rows="3" placeholder="Например: масштабировать связку"></textarea>
-      </div>
+      </details>
     </article>
   </template>
 
-  <script src="./app.js?v=204"></script>
+  <script src="./app.js?v=205"></script>
 </body>
 </html>

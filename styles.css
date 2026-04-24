@@ -124,34 +124,83 @@ input::placeholder, textarea::placeholder{color:var(--muted)}
 input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-focus)}
 
 /* GEO block */
-.geo-list{display:grid;gap:12px}
+.geo-list{display:grid;gap:10px}
 .geo-item{
   border:1px solid var(--line);
   border-radius:var(--radius-md);
-  padding:14px;
+  padding:12px;
   background:var(--surface-3);
   display:grid;gap:10px
 }
 .geo-top{
-  display:flex;justify-content:space-between;align-items:center;gap:10px
+  display:flex;align-items:center;gap:8px
 }
-.geo-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
 .geo-number{
+  flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;
-  min-width:22px;height:22px;padding:0 7px;
+  min-width:28px;height:28px;padding:0 8px;
   border-radius:var(--radius-pill);
   background:var(--accent-soft);color:var(--accent);
-  font-size:12px;font-weight:700
+  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums
 }
+.geo-top .geo-input{flex:1;min-width:0}
+.btn-icon-close{
+  flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;padding:0;
+  border:1px solid var(--line);
+  border-radius:var(--radius-pill);
+  background:transparent;color:var(--text-dim);
+  font-size:18px;line-height:1;font-weight:400;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn-icon-close:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+
+/* GEO metrics row: Spend | PDP | Avg */
+.geo-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.geo-metric label{
+  display:block;
+  font-size:11px;font-weight:600;color:var(--muted);
+  margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em
+}
+.geo-metric input{padding:9px 11px;font-size:14px;border-radius:var(--radius-sm)}
+.geo-metric-readonly .avg-output{
+  display:flex;align-items:center;justify-content:center;
+  padding:9px 11px;
+  border:1px dashed var(--line);
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-dim);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;
+  min-height:38px
+}
+
+/* Collapsible plan */
+.plan-details{
+  border-top:1px solid var(--line);
+  padding-top:10px;margin-top:2px
+}
+.plan-details summary{
+  list-style:none;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  padding:2px 0;
+  font-size:13px;font-weight:600;color:var(--text-dim);
+  transition:color .15s ease;
+  user-select:none;
+}
+.plan-details summary::-webkit-details-marker{display:none}
+.plan-details summary::before{
+  content:"›";
+  display:inline-block;
+  transition:transform .15s ease;
+  font-size:16px;line-height:1;color:var(--muted);
+  transform:rotate(0deg);
+}
+.plan-details[open] summary::before{transform:rotate(90deg)}
+.plan-details:hover summary, .plan-details[open] summary{color:var(--text)}
+.plan-details textarea{margin-top:8px}
+
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.readonly-row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 13px;
-  border:1px dashed var(--line-strong);
-  border-radius:var(--radius-md);
-  color:var(--text-dim);font-size:13px
-}
-.readonly-row strong{color:var(--text);font-size:14px;font-weight:700}
 
 /* Totals */
 .totals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
