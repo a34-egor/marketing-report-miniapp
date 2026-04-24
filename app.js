@@ -279,12 +279,32 @@ function buildPreview() {
 }
 
 function validateForm() {
-  const cycle = els.cycle.value.trim();
-  if (!cycle) return "Укажи номер цикла";
-  const items = collectItems();
-  if (!items.length) return "Добавь хотя бы одно ГЕО";
-  const bad = items.findIndex(it => !it.geo);
-  if (bad >= 0) return `В строке ${bad + 1} не указано ГЕО`;
+  const fail = (msg, field) => {
+    if (field) {
+      (field.closest(".geo-item") || field).scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => field.focus(), 300);
+    }
+    return msg;
+  };
+  if (!els.cycle.value.trim()) return fail("Укажи номер цикла", els.cycle);
+  const rows = [...els.geoList.children];
+  if (!rows.length) return "Добавь хотя бы одно ГЕО";
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const n = i + 1;
+    const geo = row.querySelector(".geo-input");
+    const spend = row.querySelector(".spend-input");
+    const pdp = row.querySelector(".pdp-input");
+    const plan = row.querySelector(".plan-input");
+    if (!geo.value.trim()) return fail(`ГЕО #${n}: не указано название`, geo);
+    if (!spend.value.trim()) return fail(`ГЕО #${n}: не указан расход`, spend);
+    if (!pdp.value.trim()) return fail(`ГЕО #${n}: не указано ПДП`, pdp);
+    if (!plan.value.trim()) {
+      const details = row.querySelector(".plan-details");
+      if (details) details.open = true;
+      return fail(`ГЕО #${n}: не указан план`, plan);
+    }
+  }
   return null;
 }
 
