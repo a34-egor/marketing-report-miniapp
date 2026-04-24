@@ -79,6 +79,15 @@ function formatNumber(v) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, "");
 }
 
+function formatDateShort(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}.${mm}`;
+}
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -326,21 +335,32 @@ function renderMyReports(rows) {
   }
   els.myReportsList.innerHTML = "";
   rows.forEach(r => {
+    const items = Array.isArray(r.items) ? r.items : [];
+    const itemsHtml = items.length
+      ? `<div class="report-items">${items.map(it => {
+          const spend = formatMoney(it.spend);
+          const pdp = formatNumber(it.pdp);
+          return `<div class="report-item">
+            <span class="report-item-name">${escapeHtml(it.geo || "—")}</span>
+            <span class="report-item-stats">${spend} · ${pdp} ПДП</span>
+          </div>`;
+        }).join("")}</div>`
+      : "";
     const card = document.createElement("div");
     card.className = "report-card";
     card.innerHTML = `
       <div class="section-head">
         <h3>Цикл ${escapeHtml(r.cycle)}</h3>
-        <span class="badge">${Number(r.total_geo) || 0} GEO</span>
+        <span class="meta-stamp">${escapeHtml(formatDateShort(r.updated_at))}</span>
       </div>
-      <div class="kpi-row">
+      <div class="kpi-row kpi-row-3">
         <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
         <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong></div>
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
-        <div class="kpi"><span>Обновлён</span><strong>${escapeHtml(r.updated_at || "—")}</strong></div>
       </div>
+      ${itemsHtml}
       <div class="card-actions">
-        <button class="btn btn-secondary" data-edit="${escapeHtml(r.report_key)}">Редактировать</button>
+        <button class="btn btn-secondary btn-sm" data-edit="${escapeHtml(r.report_key)}">Редактировать</button>
       </div>
     `;
     card.querySelector("[data-edit]").addEventListener("click", () => openReportForEdit(r.report_key));
