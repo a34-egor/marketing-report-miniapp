@@ -323,6 +323,10 @@ async function submitForm() {
     items: collectItems()
   };
 
+  const finishedText = state.editMode ? "Сохранить" : "Отправить";
+  const loadingText = state.editMode ? "Сохранение…" : "Отправка…";
+  els.submitBtn.classList.add("is-loading");
+  els.submitBtn.textContent = loadingText;
   els.submitBtn.disabled = true;
   try {
     const result = state.editMode
@@ -330,6 +334,7 @@ async function submitForm() {
       : await submitNewReport(payload);
     if (result && result.ok === false) {
       showToast(result.message || "Не удалось сохранить", "error");
+      els.submitBtn.textContent = finishedText;
     } else {
       showToast(state.editMode ? "Изменения сохранены" : "Отчёт отправлен", "success");
       resetForm();
@@ -337,7 +342,9 @@ async function submitForm() {
     }
   } catch (e) {
     showToast(`Ошибка отправки: ${e.message}`, "error");
+    els.submitBtn.textContent = finishedText;
   } finally {
+    els.submitBtn.classList.remove("is-loading");
     els.submitBtn.disabled = false;
   }
 }
