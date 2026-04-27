@@ -3,238 +3,200 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Marketing Report — Carousel Draft</title>
-  <meta name="theme-color" content="#0a0e1a" />
-  <link rel="stylesheet" href="./styles.css?v=flow2" />
+  <title>Marketing Report — Editorial Draft</title>
+  <meta name="theme-color" content="#f5f1e8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="./styles.css?v=ed1" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-  <header class="topbar">
-    <div class="brand">📊</div>
-    <nav class="segmented" id="topTabs">
-      <button type="button" class="tab-btn seg-btn active" data-view="new-report">Новый</button>
-      <button type="button" class="tab-btn seg-btn" data-view="my-reports">Мои</button>
-      <button type="button" class="tab-btn seg-btn hidden" data-view="admin-cycles" id="adminCyclesTab">Циклы</button>
-      <button type="button" class="tab-btn seg-btn hidden" data-view="admin-history" id="adminHistoryTab">История</button>
-    </nav>
-    <div class="user-chip" id="userPill">…</div>
-  </header>
+  <main class="page">
 
-  <main class="content">
+    <header class="masthead">
+      <div class="mast-rule mast-rule-thick"></div>
+      <div class="mast-band">
+        <span class="mast-issue">№ <span id="mastIssueNum">—</span></span>
+        <span class="mast-date" id="mastDate">2026 / IV</span>
+        <span class="mast-byline" id="userPill">…</span>
+      </div>
+      <div class="mast-rule"></div>
+      <h1 class="mast-title"><em>Маркетинг.</em><br/>Отчёт.</h1>
+      <div class="mast-rule"></div>
+      <nav class="mast-nav" id="topTabs">
+        <button type="button" class="tab-btn nav-link active" data-view="new-report">Отчёт</button>
+        <span class="nav-sep">·</span>
+        <button type="button" class="tab-btn nav-link" data-view="my-reports">Архив</button>
+        <span class="nav-sep tab-sep-admin hidden">·</span>
+        <button type="button" class="tab-btn nav-link hidden" data-view="admin-cycles" id="adminCyclesTab">Циклы</button>
+        <span class="nav-sep tab-sep-admin hidden">·</span>
+        <button type="button" class="tab-btn nav-link hidden" data-view="admin-history" id="adminHistoryTab">Хроника</button>
+      </nav>
+      <div class="mast-rule mast-rule-thick"></div>
+    </header>
+
     <section id="view-new-report" class="view active">
-      <div class="hero">
-        <div class="hero-head">
-          <span class="hero-eyebrow" id="formTitle">Новый отчёт</span>
-          <span class="badge hidden" id="editBadge">Редактирование</span>
+
+      <article class="dossier">
+        <div class="dossier-eyebrow">
+          <span id="formTitle">Запись отчёта</span>
+          <span class="badge hidden" id="editBadge">Правка</span>
         </div>
-        <input id="cycle" class="hero-input" type="text" inputmode="numeric" placeholder="47" />
-        <span class="hero-sub">Цикл</span>
-        <input id="editingReportKey" type="hidden" />
+        <div class="dossier-cycle">
+          <label for="cycle" class="dossier-cycle-label">Цикл</label>
+          <input id="cycle" type="text" inputmode="numeric" class="dossier-cycle-input" placeholder="—" />
+          <input id="editingReportKey" type="hidden" />
+        </div>
+      </article>
+
+      <div class="section-rule">
+        <span class="section-rule-label">Регионы</span>
       </div>
 
-      <div class="geo-toolbar">
-        <span class="geo-counter">
-          ГЕО <strong id="geoCounterCurrent">0</strong>/<strong id="geoCounterTotal">0</strong>
-        </span>
-        <div class="geo-dots" id="geoDots"></div>
-        <button id="addGeoBtn" type="button" class="chip-btn-add" aria-label="Добавить ГЕО">
-          <span>+</span>
+      <ol id="geoList" class="geo-list"></ol>
+
+      <button id="addGeoBtn" type="button" class="add-row">+ Добавить регион</button>
+
+      <div class="section-rule">
+        <span class="section-rule-label">Итог</span>
+      </div>
+
+      <article class="totals">
+        <div class="totals-grid">
+          <div class="tot"><span>Регионов</span><strong id="totalGeo">0</strong></div>
+          <div class="tot tot-big"><span>Расход</span><strong id="totalSpend">0$</strong></div>
+          <div class="tot"><span>ПДП</span><strong id="totalPdp">0</strong></div>
+          <div class="tot tot-big"><span>Цена / ПДП</span><strong id="totalAvg">0$</strong></div>
+        </div>
+      </article>
+
+      <div class="colophon-rule"></div>
+
+      <footer class="colophon">
+        <div class="colophon-meta">
+          <button id="resetBtn" type="button" class="ink-link">сбросить</button>
+          <span class="ink-link-sep">·</span>
+          <button id="previewBtn" type="button" class="ink-link">предпросмотр →</button>
+        </div>
+        <button id="submitBtn" type="button" class="press">
+          <span class="press-label">К публикации</span>
+          <span class="press-arrow">→</span>
         </button>
-      </div>
-
-      <div id="geoList" class="geo-list"></div>
-
-      <div class="secondary-actions">
-        <button id="previewBtn" type="button" class="link-btn">Предпросмотр</button>
-        <button id="resetBtn" type="button" class="link-btn link-btn-muted">Сбросить</button>
-      </div>
+      </footer>
     </section>
 
     <section id="view-my-reports" class="view">
-      <div class="list-toolbar">
-        <span class="section-title">Мои отчёты</span>
-        <button id="refreshMyReportsBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
-      </div>
+      <header class="archive-head">
+        <h2>Архив отчётов</h2>
+        <button id="refreshMyReportsBtn" type="button" class="ink-link" aria-label="Обновить">↻ обновить</button>
+      </header>
       <div id="myReportsList" class="list-wrap">
         <div class="empty-state">Загрузка…</div>
       </div>
     </section>
 
     <section id="view-admin-cycles" class="view">
-      <div class="list-toolbar">
-        <span class="section-title">Циклы</span>
-        <button id="refreshAdminCyclesBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
-      </div>
+      <header class="archive-head">
+        <h2>Циклы</h2>
+        <button id="refreshAdminCyclesBtn" type="button" class="ink-link" aria-label="Обновить">↻ обновить</button>
+      </header>
       <div id="adminCyclesList" class="list-wrap">
         <div class="empty-state">Загрузка…</div>
       </div>
     </section>
 
     <section id="view-admin-history" class="view">
-      <div class="list-toolbar">
-        <span class="section-title">История изменений</span>
-        <button id="refreshAdminHistoryBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
-      </div>
+      <header class="archive-head">
+        <h2>Хроника изменений</h2>
+        <button id="refreshAdminHistoryBtn" type="button" class="ink-link" aria-label="Обновить">↻ обновить</button>
+      </header>
       <div id="adminHistoryList" class="list-wrap">
         <div class="empty-state">Загрузка…</div>
       </div>
     </section>
 
-    <section id="previewCard" class="card preview hidden">
-      <div class="section-bar">
-        <span class="section-title">Предпросмотр</span>
-        <button id="closePreviewBtn" type="button" class="chip-btn">Закрыть</button>
-      </div>
+    <section id="previewCard" class="preview-sheet hidden">
+      <header class="preview-head">
+        <h2>Предпросмотр</h2>
+        <button id="closePreviewBtn" type="button" class="ink-link">закрыть ✕</button>
+      </header>
       <pre id="previewText"></pre>
     </section>
   </main>
 
-  <span id="totalGeo" hidden>0</span>
-
-  <footer class="dock">
-    <div class="dock-stats">
-      <div class="ds"><span>Расход</span><strong id="totalSpend">0$</strong></div>
-      <div class="ds"><span>ПДП</span><strong id="totalPdp">0</strong></div>
-      <div class="ds"><span>Ц/ПДП</span><strong id="totalAvg">0$</strong></div>
-    </div>
-    <button id="submitBtn" type="button" class="btn-cta">Отправить</button>
-  </footer>
-
   <template id="geoTemplate">
-    <article class="geo-item">
-      <div class="geo-card-head">
-        <span class="geo-number">ГЕО #1</span>
-        <button type="button" class="remove-geo close-btn" aria-label="Удалить">×</button>
+    <li class="geo-item">
+      <div class="geo-mark">
+        <span class="geo-number">I.</span>
+        <button type="button" class="remove-geo geo-remove" aria-label="Удалить">×</button>
       </div>
 
-      <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
+      <input class="geo-input" type="text" placeholder="Название региона" />
 
-      <div class="geo-metrics">
-        <div class="metric">
+      <div class="geo-meta">
+        <div class="m-cell">
           <label>Расход</label>
-          <input class="spend-input" type="text" inputmode="decimal" placeholder="2000" />
+          <input class="spend-input" type="text" inputmode="decimal" placeholder="—" />
+          <span class="m-suffix">$</span>
         </div>
-        <div class="metric">
+        <div class="m-cell">
           <label>ПДП</label>
-          <input class="pdp-input" type="text" inputmode="decimal" placeholder="40" />
+          <input class="pdp-input" type="text" inputmode="decimal" placeholder="—" />
         </div>
-      </div>
-
-      <div class="readonly-row">
-        <span class="readonly-label">Ц/ПДП</span>
-        <span class="avg-output">0$</span>
+        <div class="m-cell m-cell-readonly">
+          <label>Цена</label>
+          <span class="avg-output">—</span>
+        </div>
       </div>
 
       <details class="plan-details" open>
-        <summary>План на следующий цикл</summary>
+        <summary>Перспективы следующего цикла</summary>
         <textarea class="plan-input" rows="3" placeholder="Например: масштабировать связку"></textarea>
       </details>
-    </article>
+    </li>
   </template>
 
   <script>
-    // Carousel logic — watches #geoList for changes, syncs counter and dots,
-    // auto-scrolls to newly added items, and lets dots act as nav.
+    // Mirror cycle input into masthead "№ X" so the page header reads
+    // like an issue number — pure cosmetic, doesn't touch app.js logic.
     (function () {
-      const geoList = document.getElementById('geoList');
-      const dotsEl = document.getElementById('geoDots');
-      const currentEl = document.getElementById('geoCounterCurrent');
-      const totalEl = document.getElementById('geoCounterTotal');
+      const cycle = document.getElementById('cycle');
+      const out = document.getElementById('mastIssueNum');
+      const update = () => {
+        const v = (cycle.value || '').trim();
+        out.textContent = v || '—';
+      };
+      cycle.addEventListener('input', update);
+      // App.js may set cycle.value when editing — observe via mutation
+      const mo = new MutationObserver(update);
+      mo.observe(cycle, { attributes: true, attributeFilter: ['value'] });
+      // Polling fallback (cheap), in case .value is set programmatically
+      let last = '';
+      setInterval(() => { if (cycle.value !== last) { last = cycle.value; update(); } }, 400);
+      update();
 
-      function items() { return Array.from(geoList.children); }
-
-      function activeIdx() {
-        const arr = items();
-        if (!arr.length) return -1;
-        const containerRect = geoList.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-        let bestIdx = 0;
-        let bestDist = Infinity;
-        arr.forEach((el, i) => {
-          const r = el.getBoundingClientRect();
-          const c = r.left + r.width / 2;
-          const d = Math.abs(c - containerCenter);
-          if (d < bestDist) { bestDist = d; bestIdx = i; }
-        });
-        return bestIdx;
+      // Year label
+      const dateEl = document.getElementById('mastDate');
+      if (dateEl) {
+        const d = new Date();
+        const month = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][d.getMonth()];
+        dateEl.textContent = d.getFullYear() + ' / ' + month;
       }
 
-      function renderDots(total, idx) {
-        dotsEl.innerHTML = '';
-        for (let i = 0; i < total; i++) {
-          const dot = document.createElement('button');
-          dot.type = 'button';
-          dot.className = 'dot' + (i === idx ? ' active' : '');
-          dot.dataset.idx = String(i);
-          dot.setAttribute('aria-label', 'ГЕО ' + (i + 1));
-          dotsEl.appendChild(dot);
-        }
-      }
-
-      function updateUI() {
-        const arr = items();
-        const total = arr.length;
-        const idx = total ? activeIdx() : -1;
-        currentEl.textContent = String(total ? idx + 1 : 0);
-        totalEl.textContent = String(total);
-        renderDots(total, idx);
-      }
-
-      function scrollToIdx(idx) {
-        const arr = items();
-        const el = arr[idx];
-        if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-
-      let scheduled = false;
-      geoList.addEventListener('scroll', () => {
-        if (scheduled) return;
-        scheduled = true;
-        requestAnimationFrame(() => {
-          scheduled = false;
-          updateUI();
-        });
-      });
-
-      dotsEl.addEventListener('click', (e) => {
-        const dot = e.target.closest('.dot');
-        if (!dot) return;
-        scrollToIdx(Number(dot.dataset.idx));
-      });
-
-      // When focus moves into a geo-item that is off-screen, snap to it.
-      geoList.addEventListener('focusin', (e) => {
-        const item = e.target.closest('.geo-item');
-        if (!item) return;
-        const rect = item.getBoundingClientRect();
-        const cont = geoList.getBoundingClientRect();
-        if (rect.left < cont.left - 4 || rect.right > cont.right + 4) {
-          item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }
-      });
-
-      let lastCount = 0;
-      const mo = new MutationObserver(() => {
-        const arr = items();
-        if (arr.length > lastCount) {
-          // newly added — scroll to last after a tick
-          const newIdx = arr.length - 1;
-          setTimeout(() => scrollToIdx(newIdx), 30);
-        }
-        lastCount = arr.length;
-        updateUI();
-      });
-      mo.observe(geoList, { childList: true });
-
-      // Initial baseline (app.js may have already added one row by now,
-      // but if not, lastCount=0 and we'll catch the first add.)
-      lastCount = items().length;
-      updateUI();
+      // Show admin separators when admin tabs become visible
+      const observeAdmin = () => {
+        const isAdmin = !document.getElementById('adminCyclesTab').classList.contains('hidden');
+        document.querySelectorAll('.tab-sep-admin').forEach(s => s.classList.toggle('hidden', !isAdmin));
+      };
+      const adminMo = new MutationObserver(observeAdmin);
+      adminMo.observe(document.getElementById('adminCyclesTab'), { attributes: true, attributeFilter: ['class'] });
+      observeAdmin();
     })();
   </script>
 
-  <script src="../app.js?v=flow2"></script>
+  <script src="../app.js?v=ed1"></script>
 </body>
 </html>
