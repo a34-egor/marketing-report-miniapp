@@ -3,157 +3,133 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Marketing Report — MUI Draft</title>
-  <meta name="theme-color" content="#1976d2" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="./styles.css?v=mui1" />
+  <title>Marketing Report — FLOW Draft</title>
+  <meta name="theme-color" content="#0a0e1a" />
+  <link rel="stylesheet" href="./styles.css?v=flow1" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <div id="toastContainer" class="snackbar-container" aria-live="polite"></div>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-  <header class="app-bar">
-    <h1>Маркетинговые отчёты</h1>
-    <div class="user-chip" id="userPill">Загрузка…</div>
+  <header class="topbar">
+    <div class="brand">📊</div>
+    <nav class="segmented" id="topTabs">
+      <button type="button" class="tab-btn seg-btn active" data-view="new-report">Новый</button>
+      <button type="button" class="tab-btn seg-btn" data-view="my-reports">Мои</button>
+      <button type="button" class="tab-btn seg-btn hidden" data-view="admin-cycles" id="adminCyclesTab">Циклы</button>
+      <button type="button" class="tab-btn seg-btn hidden" data-view="admin-history" id="adminHistoryTab">История</button>
+    </nav>
+    <div class="user-chip" id="userPill">…</div>
   </header>
 
-  <div class="app">
-    <main class="content">
-      <section id="view-new-report" class="view active">
-        <div class="form-card">
-          <div class="section-head">
-            <h2 id="formTitle">Новый отчёт</h2>
-            <span class="badge hidden" id="editBadge">Редактирование</span>
-          </div>
-          <div class="text-field">
-            <input id="cycle" type="text" inputmode="numeric" placeholder=" " />
-            <label for="cycle">Цикл</label>
-          </div>
-          <input id="editingReportKey" type="hidden" />
+  <main class="content">
+    <section id="view-new-report" class="view active">
+      <div class="hero">
+        <div class="hero-head">
+          <span class="hero-eyebrow" id="formTitle">Новый отчёт</span>
+          <span class="badge hidden" id="editBadge">Редактирование</span>
         </div>
+        <input id="cycle" class="hero-input" type="text" inputmode="numeric" placeholder="47" />
+        <span class="hero-sub">Цикл</span>
+        <input id="editingReportKey" type="hidden" />
+      </div>
 
-        <div class="form-card">
-          <div class="section-head">
-            <h2>ГЕО</h2>
-            <button id="addGeoBtn" type="button" class="btn btn-text">+ ДОБАВИТЬ</button>
-          </div>
-          <div id="geoList" class="geo-list"></div>
+      <div class="section">
+        <div class="section-bar">
+          <span class="section-title">ГЕО</span>
+          <button id="addGeoBtn" type="button" class="chip-btn">+ Добавить</button>
         </div>
+        <div id="geoList" class="geo-list"></div>
+      </div>
 
-        <div class="form-card totals-card">
-          <div class="section-head"><h2>Итоги</h2></div>
-          <div class="totals-grid">
-            <div><span>ГЕО</span><strong id="totalGeo">0</strong></div>
-            <div><span>Расход</span><strong id="totalSpend">0$</strong></div>
-            <div><span>ПДП</span><strong id="totalPdp">0</strong></div>
-            <div><span>Ср. цена ПДП</span><strong id="totalAvg">0$</strong></div>
-          </div>
-        </div>
+      <div class="below-list">
+        <button id="previewBtn" type="button" class="link-btn">Предпросмотр</button>
+        <button id="resetBtn" type="button" class="link-btn link-btn-muted">Сбросить</button>
+      </div>
+    </section>
 
-        <div class="actions-row">
-          <button id="resetBtn" type="button" class="btn btn-text">Сбросить</button>
-          <button id="previewBtn" type="button" class="btn btn-outlined">Предпросмотр</button>
-          <button id="submitBtn" type="button" class="btn btn-contained btn-primary">Отправить</button>
-        </div>
-      </section>
+    <section id="view-my-reports" class="view">
+      <div class="list-toolbar">
+        <span class="section-title">Мои отчёты</span>
+        <button id="refreshMyReportsBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
+      </div>
+      <div id="myReportsList" class="list-wrap">
+        <div class="empty-state">Загрузка…</div>
+      </div>
+    </section>
 
-      <section id="view-my-reports" class="view">
-        <div class="list-header">
-          <h2>Мои отчёты</h2>
-          <button id="refreshMyReportsBtn" type="button" class="btn-icon-only" aria-label="Обновить">↻</button>
-        </div>
-        <div id="myReportsList" class="list-wrap">
-          <div class="empty-state">Загрузка…</div>
-        </div>
-      </section>
+    <section id="view-admin-cycles" class="view">
+      <div class="list-toolbar">
+        <span class="section-title">Циклы</span>
+        <button id="refreshAdminCyclesBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
+      </div>
+      <div id="adminCyclesList" class="list-wrap">
+        <div class="empty-state">Загрузка…</div>
+      </div>
+    </section>
 
-      <section id="view-admin-cycles" class="view">
-        <div class="list-header">
-          <h2>Циклы</h2>
-          <button id="refreshAdminCyclesBtn" type="button" class="btn-icon-only" aria-label="Обновить">↻</button>
-        </div>
-        <div id="adminCyclesList" class="list-wrap">
-          <div class="empty-state">Загрузка…</div>
-        </div>
-      </section>
+    <section id="view-admin-history" class="view">
+      <div class="list-toolbar">
+        <span class="section-title">История изменений</span>
+        <button id="refreshAdminHistoryBtn" type="button" class="icon-btn" aria-label="Обновить">↻</button>
+      </div>
+      <div id="adminHistoryList" class="list-wrap">
+        <div class="empty-state">Загрузка…</div>
+      </div>
+    </section>
 
-      <section id="view-admin-history" class="view">
-        <div class="list-header">
-          <h2>История</h2>
-          <button id="refreshAdminHistoryBtn" type="button" class="btn-icon-only" aria-label="Обновить">↻</button>
-        </div>
-        <div id="adminHistoryList" class="list-wrap">
-          <div class="empty-state">Загрузка…</div>
-        </div>
-      </section>
+    <section id="previewCard" class="card preview hidden">
+      <div class="section-bar">
+        <span class="section-title">Предпросмотр</span>
+        <button id="closePreviewBtn" type="button" class="chip-btn">Закрыть</button>
+      </div>
+      <pre id="previewText"></pre>
+    </section>
+  </main>
 
-      <section id="previewCard" class="form-card preview hidden">
-        <div class="section-head">
-          <h2>Предпросмотр</h2>
-          <button id="closePreviewBtn" type="button" class="btn btn-text">Закрыть</button>
-        </div>
-        <pre id="previewText"></pre>
-      </section>
-    </main>
-  </div>
+  <!-- Hidden elements still needed by JS -->
+  <span id="totalGeo" hidden>0</span>
 
-  <nav class="bottom-nav" id="topTabs">
-    <button type="button" class="tab-btn active" data-view="new-report">
-      <span class="bn-icon">📝</span>
-      <span class="bn-label">Новый</span>
-    </button>
-    <button type="button" class="tab-btn" data-view="my-reports">
-      <span class="bn-icon">📋</span>
-      <span class="bn-label">Мои</span>
-    </button>
-    <button type="button" class="tab-btn hidden" data-view="admin-cycles" id="adminCyclesTab">
-      <span class="bn-icon">📊</span>
-      <span class="bn-label">Циклы</span>
-    </button>
-    <button type="button" class="tab-btn hidden" data-view="admin-history" id="adminHistoryTab">
-      <span class="bn-icon">🕘</span>
-      <span class="bn-label">История</span>
-    </button>
-  </nav>
+  <!-- Sticky dock at bottom — live totals + submit -->
+  <footer class="dock">
+    <div class="dock-stats">
+      <div class="ds"><span>Расход</span><strong id="totalSpend">0$</strong></div>
+      <div class="ds"><span>ПДП</span><strong id="totalPdp">0</strong></div>
+      <div class="ds"><span>Ц/ПДП</span><strong id="totalAvg">0$</strong></div>
+    </div>
+    <button id="submitBtn" type="button" class="btn-cta">Отправить</button>
+  </footer>
 
   <template id="geoTemplate">
     <article class="geo-item">
       <div class="geo-top">
         <span class="geo-number">#1</span>
-        <div class="text-field text-field-flex">
-          <input class="geo-input" type="text" placeholder=" " />
-          <label>Название ГЕО</label>
-        </div>
-        <button type="button" class="remove-geo btn-icon-close" aria-label="Удалить">×</button>
+        <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
+        <button type="button" class="remove-geo close-btn" aria-label="Удалить">×</button>
       </div>
 
       <div class="geo-metrics">
-        <div class="text-field">
-          <input class="spend-input" type="text" inputmode="decimal" placeholder=" " />
+        <div class="metric">
           <label>Расход</label>
+          <input class="spend-input" type="text" inputmode="decimal" placeholder="2000" />
         </div>
-        <div class="text-field">
-          <input class="pdp-input" type="text" inputmode="decimal" placeholder=" " />
+        <div class="metric">
           <label>ПДП</label>
+          <input class="pdp-input" type="text" inputmode="decimal" placeholder="40" />
         </div>
-        <div class="readonly-field">
-          <span class="readonly-label">Ц/ПДП</span>
-          <span class="avg-output">0$</span>
+        <div class="metric metric-readonly">
+          <label>Ц/ПДП</label>
+          <div class="avg-output">0$</div>
         </div>
       </div>
 
       <details class="plan-details" open>
         <summary>План на следующий цикл</summary>
-        <div class="text-field">
-          <textarea class="plan-input" rows="3" placeholder=" "></textarea>
-          <label>План</label>
-        </div>
+        <textarea class="plan-input" rows="3" placeholder="Например: масштабировать связку"></textarea>
       </details>
     </article>
   </template>
 
-  <script src="../app.js?v=mui1"></script>
+  <script src="../app.js?v=flow1"></script>
 </body>
 </html>
