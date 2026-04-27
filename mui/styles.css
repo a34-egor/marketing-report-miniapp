@@ -1,4 +1,4 @@
-/* FLOW layout draft — flat dark with sticky shell */
+/* Carousel layout draft — horizontal swipe between GEOs, sticky shell */
 :root{
   color-scheme: dark;
 
@@ -41,10 +41,10 @@ html,body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,sans-serif;
   font-size:15px;line-height:1.4;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
 body{
   min-height:100dvh;
-  /* leave room for sticky dock when shown */
 }
 body:has(#view-new-report.view.active){
   padding-bottom:calc(var(--dock-h) + env(safe-area-inset-bottom))
@@ -59,14 +59,12 @@ body:has(#view-new-report.view.active){
   -webkit-backdrop-filter:saturate(140%) blur(14px);
   backdrop-filter:saturate(140%) blur(14px);
   border-bottom:1px solid var(--line);
-  z-index:10;
-  min-height:var(--topbar-h);
+  z-index:10;min-height:var(--topbar-h);
 }
 .brand{
   flex-shrink:0;
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-  font-size:18px;
-  background:var(--surface);border-radius:10px;
+  font-size:18px;background:var(--surface);border-radius:10px;
   border:1px solid var(--line);
 }
 .segmented{
@@ -75,16 +73,14 @@ body:has(#view-new-report.view.active){
   background:var(--surface);
   border:1px solid var(--line);
   border-radius:11px;
-  padding:3px;
-  overflow:hidden;
+  padding:3px;overflow:hidden;
 }
 .seg-btn{
   flex:1;min-width:0;
   border:none;background:transparent;color:var(--text-dim);
   padding:7px 8px;
   font-size:13px;font-weight:600;font-family:inherit;
-  border-radius:8px;
-  cursor:pointer;
+  border-radius:8px;cursor:pointer;
   transition:background .15s, color .15s;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
@@ -111,13 +107,10 @@ body:has(#view-new-report.view.active){
 
 /* Hero (cycle input) */
 .hero{
-  padding:30px 18px 22px;
+  padding:24px 18px 18px;
   border-bottom:1px solid var(--line);
 }
-.hero-head{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:6px
-}
+.hero-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .hero-eyebrow{
   font-size:12px;font-weight:600;letter-spacing:0.07em;
   text-transform:uppercase;color:var(--muted)
@@ -125,132 +118,170 @@ body:has(#view-new-report.view.active){
 .hero-input{
   display:block;width:100%;
   background:transparent;border:0;outline:none;
-  color:var(--text);
-  font-family:inherit;
+  color:var(--text);font-family:inherit;
   font-size:clamp(48px, 14vw, 64px);
-  font-weight:800;
-  letter-spacing:-0.04em;
-  line-height:1;
-  padding:6px 0 8px;
-  caret-color:var(--accent);
+  font-weight:800;letter-spacing:-0.04em;line-height:1;
+  padding:6px 0 8px;caret-color:var(--accent);
 }
 .hero-input::placeholder{color:rgba(255,255,255,0.12);font-weight:800}
 .hero-sub{
-  display:block;
-  font-size:12px;font-weight:600;color:var(--muted);
-  letter-spacing:0.07em;text-transform:uppercase;
-  margin-top:4px
+  display:block;font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:0.07em;text-transform:uppercase;margin-top:4px
 }
 
-/* Section header inside content */
-.section{padding:0 0 18px}
-.section-bar{
+/* Geo toolbar (between hero and carousel) */
+.geo-toolbar{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:18px 18px 10px;
+  padding:18px 20px 12px;
 }
-.section-title{
-  font-size:14px;font-weight:700;color:var(--text);
-  letter-spacing:0.02em
+.geo-counter{
+  font-size:11px;font-weight:600;color:var(--text-dim);
+  letter-spacing:0.06em;text-transform:uppercase;
+  flex-shrink:0
 }
-.chip-btn{
-  display:inline-flex;align-items:center;gap:4px;
-  border:1px solid var(--line);border-radius:999px;
-  padding:6px 12px;
-  background:var(--surface);color:var(--text);
-  font-size:12.5px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  transition:background .15s, border-color .15s
-}
-.chip-btn:hover{background:var(--surface-2);border-color:var(--line-strong)}
-
-/* GEO list — flat rows separated by horizontal dividers */
-.geo-list{display:flex;flex-direction:column}
-.geo-item{
-  padding:14px 18px;
-  display:flex;flex-direction:column;gap:12px;
-  border-top:1px solid var(--line);
-}
-.geo-item:first-child{border-top:1px solid var(--line)}
-
-.geo-top{display:flex;align-items:center;gap:10px}
-.geo-number{
-  flex-shrink:0;
-  font-size:13px;font-weight:700;
-  color:var(--accent);
-  letter-spacing:-0.02em;
+.geo-counter strong{
+  color:var(--text);font-weight:700;
   font-variant-numeric:tabular-nums;
-  width:24px
+  margin:0 2px;
 }
-.geo-input{
-  flex:1;min-width:0;
-  background:transparent;
-  border:0;border-bottom:1px solid var(--line);
-  color:var(--text);
-  font-size:17px;font-weight:600;font-family:inherit;
-  padding:6px 2px;
-  outline:none;
-  transition:border-color .15s
+.geo-dots{
+  flex:1;
+  display:flex;justify-content:center;align-items:center;gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
 }
-.geo-input::placeholder{color:var(--muted);font-weight:500}
-.geo-input:focus{border-bottom-color:var(--accent)}
-.close-btn{
+.geo-dots::-webkit-scrollbar{display:none}
+.dot{
+  flex-shrink:0;
+  width:8px;height:8px;
+  border:0;border-radius:50%;
+  background:var(--surface-2);
+  cursor:pointer;padding:0;
+  transition:background .15s, transform .15s, width .15s;
+}
+.dot:hover{background:var(--line-strong)}
+.dot.active{background:var(--accent);width:20px;border-radius:4px}
+.chip-btn-add{
   flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;
-  width:30px;height:30px;padding:0;
+  width:32px;height:32px;padding:0;
+  border:1px solid var(--line);border-radius:50%;
+  background:var(--accent-soft);color:var(--accent);
+  font-size:18px;font-weight:600;line-height:1;
+  cursor:pointer;font-family:inherit;
+  transition:background .15s, transform .1s;
+}
+.chip-btn-add:hover{background:var(--accent);color:#fff}
+.chip-btn-add:active{transform:scale(0.92)}
+
+/* GEO carousel — horizontal scroll-snap */
+.geo-list{
+  display:flex;
+  overflow-x:auto;overflow-y:visible;
+  scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  gap:12px;
+  padding:0 16px 8px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.geo-list::-webkit-scrollbar{display:none}
+
+.geo-item{
+  flex:0 0 calc(100% - 32px);
+  max-width:calc(100% - 32px);
+  scroll-snap-align:center;
+  display:flex;flex-direction:column;gap:14px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+
+.geo-card-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.geo-number{
+  display:inline-flex;align-items:center;
+  padding:5px 12px;
+  background:var(--accent-soft);color:var(--accent);
+  border-radius:999px;
+  font-size:11px;font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;
+  font-variant-numeric:tabular-nums;
+}
+.close-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;padding:0;
   border:0;border-radius:50%;
   background:transparent;color:var(--muted);
-  font-size:20px;line-height:1;font-weight:300;
+  font-size:22px;line-height:1;font-weight:300;
   cursor:pointer;font-family:inherit;
-  transition:background .15s, color .15s
+  transition:background .15s, color .15s;
 }
 .close-btn:hover{background:var(--danger-soft);color:var(--danger)}
 
-/* GEO metrics row */
-.geo-metrics{
-  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
-  padding-left:34px /* indent under .geo-number for alignment */
+/* Inputs in card */
+.geo-input{
+  width:100%;
+  background:var(--surface-3);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+  color:var(--text);
+  font-size:18px;font-weight:600;font-family:inherit;
+  outline:none;
+  transition:background .15s, border-color .15s;
 }
+.geo-input::placeholder{color:var(--muted);font-weight:500}
+.geo-input:focus{background:var(--surface-2);border-color:var(--accent)}
+
+.geo-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .metric label{
   display:block;
   font-size:10px;font-weight:600;color:var(--muted);
   text-transform:uppercase;letter-spacing:0.06em;
-  margin-bottom:4px
+  margin-bottom:5px
 }
 .metric input{
   width:100%;
-  background:var(--surface);
+  background:var(--surface-3);
   border:1px solid var(--line);
-  border-radius:8px;
-  padding:9px 11px;
-  color:var(--text);font-size:14px;font-weight:500;font-family:inherit;
+  border-radius:10px;
+  padding:11px 13px;
+  color:var(--text);
+  font-size:15px;font-weight:600;font-family:inherit;
   font-variant-numeric:tabular-nums;
   outline:none;
-  transition:background .15s, border-color .15s
+  transition:background .15s, border-color .15s;
 }
-.metric input:focus{
-  background:var(--surface-2);border-color:var(--accent)
-}
-.metric-readonly .avg-output{
-  display:flex;align-items:center;
-  padding:9px 11px;
+.metric input:focus{background:var(--surface-2);border-color:var(--accent)}
+
+.readonly-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;
   border:1px dashed var(--line);
-  border-radius:8px;
-  color:var(--text-dim);
-  font-size:14px;font-weight:600;
+  border-radius:10px;
+}
+.readonly-label{
+  font-size:11px;font-weight:600;color:var(--muted);
+  letter-spacing:0.06em;text-transform:uppercase
+}
+.avg-output{
+  font-size:15px;font-weight:700;color:var(--text);
   font-variant-numeric:tabular-nums;
-  min-height:36px
 }
 
 /* Plan details */
 .plan-details{
-  margin-left:34px;
-  padding-top:6px;
-  border-top:1px dashed var(--line)
+  border-top:1px dashed var(--line);
+  padding-top:10px
 }
 .plan-details summary{
   list-style:none;cursor:pointer;
   display:flex;align-items:center;gap:6px;
-  padding:4px 0;
+  padding:2px 0;
   font-size:11px;font-weight:600;color:var(--muted);
   text-transform:uppercase;letter-spacing:0.06em;
   user-select:none
@@ -264,38 +295,40 @@ body:has(#view-new-report.view.active){
 .plan-details[open] summary::before{transform:rotate(90deg)}
 .plan-details:hover summary,.plan-details[open] summary{color:var(--text-dim)}
 .plan-input{
-  width:100%;margin-top:6px;
-  background:var(--surface);
+  width:100%;margin-top:8px;
+  background:var(--surface-3);
   border:1px solid var(--line);
-  border-radius:8px;
-  padding:10px 12px;
+  border-radius:10px;
+  padding:11px 13px;
   color:var(--text);font-size:14px;font-family:inherit;
-  resize:vertical;min-height:60px;
+  resize:vertical;min-height:64px;
   outline:none;
   transition:background .15s, border-color .15s
 }
 .plan-input:focus{background:var(--surface-2);border-color:var(--accent)}
 
-/* Below list (preview/reset secondary actions) */
-.below-list{
+/* Secondary actions row (preview / reset) */
+.secondary-actions{
   display:flex;justify-content:flex-end;gap:14px;
-  padding:8px 18px 24px
+  padding:14px 20px 18px
 }
 .link-btn{
   background:transparent;border:0;
   color:var(--text-dim);
   font-size:13px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  padding:6px 4px;
+  cursor:pointer;padding:6px 4px;
   transition:color .15s
 }
 .link-btn:hover{color:var(--text)}
 .link-btn-muted{color:var(--muted)}
 
-/* List toolbars (Мои отчёты, Циклы, История) */
+/* List toolbars (Мои отчёты / Циклы / История) */
 .list-toolbar{
   display:flex;justify-content:space-between;align-items:center;
-  padding:18px 18px 12px
+  padding:18px 20px 12px
+}
+.section-title{
+  font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.02em
 }
 .list-wrap{
   display:flex;flex-direction:column;
@@ -311,7 +344,7 @@ body:has(#view-new-report.view.active){
 }
 .icon-btn:hover{background:var(--surface-2);color:var(--text);border-color:var(--line-strong)}
 
-/* Cards (reports list / cycles / history) — JS produces these */
+/* List cards (reports / cycles / history) — produced by app.js */
 .report-card,.cycle-card,.history-card{
   background:var(--surface);
   border:1px solid var(--line);
@@ -330,10 +363,8 @@ body:has(#view-new-report.view.active){
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .kpi-row-3{grid-template-columns:repeat(3,1fr)}
 .kpi{
-  padding:8px 10px;
-  background:var(--surface-3);
-  border:1px solid var(--line);
-  border-radius:8px
+  padding:8px 10px;background:var(--surface-3);
+  border:1px solid var(--line);border-radius:8px
 }
 .kpi span{
   display:block;color:var(--muted);
@@ -366,7 +397,6 @@ body:has(#view-new-report.view.active){
   color:var(--muted);text-align:center;font-size:13px
 }
 
-/* Badge */
 .badge{
   display:inline-flex;align-items:center;
   padding:3px 9px;border-radius:999px;
@@ -377,8 +407,7 @@ body:has(#view-new-report.view.active){
 /* Sticky dock at bottom */
 .dock{
   position:fixed;bottom:0;left:0;right:0;
-  display:none;
-  flex-direction:column;gap:10px;
+  display:none;flex-direction:column;gap:10px;
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   background:var(--bg-translucent-strong);
   -webkit-backdrop-filter:saturate(140%) blur(20px);
@@ -387,14 +416,10 @@ body:has(#view-new-report.view.active){
   z-index:10
 }
 body:has(#view-new-report.view.active) .dock{display:flex}
-.dock-stats{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:10px
-}
+.dock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .ds{
-  padding:8px 10px;
-  background:var(--surface-3);
-  border:1px solid var(--line);
-  border-radius:10px
+  padding:8px 10px;background:var(--surface-3);
+  border:1px solid var(--line);border-radius:10px
 }
 .ds span{
   display:block;color:var(--muted);
@@ -406,13 +431,11 @@ body:has(#view-new-report.view.active) .dock{display:flex}
   font-variant-numeric:tabular-nums;letter-spacing:-0.005em
 }
 .btn-cta{
-  width:100%;
-  padding:14px;
+  width:100%;padding:14px;
   background:var(--accent);color:#fff;
   border:0;border-radius:12px;
   font-size:15px;font-weight:700;font-family:inherit;
-  letter-spacing:0.005em;
-  cursor:pointer;
+  letter-spacing:0.005em;cursor:pointer;
   box-shadow:0 6px 20px var(--accent-glow);
   transition:background .15s, box-shadow .15s, transform .05s
 }
@@ -432,7 +455,7 @@ body:has(#view-new-report.view.active) .dock{display:flex}
 }
 @keyframes btn-spin{to{transform:rotate(360deg)}}
 
-/* Aliases for shared JS — mostly used in setEditMode + my-reports button rendering */
+/* Aliases used in JS-generated cards */
 .btn{cursor:pointer;font-family:inherit}
 .btn.is-loading{pointer-events:none}
 .btn.is-loading::before{
@@ -444,10 +467,7 @@ body:has(#view-new-report.view.active) .dock{display:flex}
   animation:btn-spin 0.7s linear infinite;
   vertical-align:-2px;
 }
-.btn-primary, .btn-secondary, .btn-ghost{}
 .btn-sm{padding:5px 10px;font-size:12px;font-weight:600;border-radius:7px}
-
-/* "Редактировать" button on report-card uses btn btn-secondary btn-sm */
 .report-card .btn-secondary, .cycle-card .btn-secondary, .history-card .btn-secondary,
 .report-card .btn, .cycle-card .btn, .history-card .btn{
   background:var(--surface);
@@ -462,6 +482,17 @@ body:has(#view-new-report.view.active) .dock{display:flex}
   background:var(--surface-2);border-color:var(--line-strong)
 }
 
+.chip-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:6px 12px;
+  background:var(--surface);color:var(--text);
+  font-size:12.5px;font-weight:600;font-family:inherit;
+  cursor:pointer;
+  transition:background .15s, border-color .15s
+}
+.chip-btn:hover{background:var(--surface-2);border-color:var(--line-strong)}
+
 /* Preview card */
 .card.preview{
   margin:0 18px 24px;
@@ -470,6 +501,10 @@ body:has(#view-new-report.view.active) .dock{display:flex}
   border-radius:14px;
   padding:14px
 }
+.section-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:10px
+}
 .preview pre{
   white-space:pre-wrap;word-break:break-word;margin:0;
   color:var(--text-dim);
@@ -477,7 +512,7 @@ body:has(#view-new-report.view.active) .dock{display:flex}
   font-size:12px;line-height:1.6
 }
 
-/* Toast (top center, similar to current) */
+/* Toast */
 .toast-container{
   position:fixed;
   top:max(12px, env(safe-area-inset-top));
@@ -510,8 +545,6 @@ body:has(#view-new-report.view.active) .dock{display:flex}
 
 /* Responsive */
 @media (max-width:380px){
-  .geo-metrics{padding-left:0;grid-template-columns:1fr 1fr 1fr;gap:6px}
-  .plan-details{margin-left:0}
   .seg-btn{padding:7px 6px;font-size:12px}
   .user-chip{max-width:24vw;font-size:11px;padding:6px 9px}
   .dock-stats{grid-template-columns:repeat(3,1fr);gap:6px}

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Marketing Report — FLOW Draft</title>
+  <title>Marketing Report — Carousel Draft</title>
   <meta name="theme-color" content="#0a0e1a" />
-  <link rel="stylesheet" href="./styles.css?v=flow1" />
+  <link rel="stylesheet" href="./styles.css?v=flow2" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -34,15 +34,19 @@
         <input id="editingReportKey" type="hidden" />
       </div>
 
-      <div class="section">
-        <div class="section-bar">
-          <span class="section-title">ГЕО</span>
-          <button id="addGeoBtn" type="button" class="chip-btn">+ Добавить</button>
-        </div>
-        <div id="geoList" class="geo-list"></div>
+      <div class="geo-toolbar">
+        <span class="geo-counter">
+          ГЕО <strong id="geoCounterCurrent">0</strong>/<strong id="geoCounterTotal">0</strong>
+        </span>
+        <div class="geo-dots" id="geoDots"></div>
+        <button id="addGeoBtn" type="button" class="chip-btn-add" aria-label="Добавить ГЕО">
+          <span>+</span>
+        </button>
       </div>
 
-      <div class="below-list">
+      <div id="geoList" class="geo-list"></div>
+
+      <div class="secondary-actions">
         <button id="previewBtn" type="button" class="link-btn">Предпросмотр</button>
         <button id="resetBtn" type="button" class="link-btn link-btn-muted">Сбросить</button>
       </div>
@@ -87,10 +91,8 @@
     </section>
   </main>
 
-  <!-- Hidden elements still needed by JS -->
   <span id="totalGeo" hidden>0</span>
 
-  <!-- Sticky dock at bottom — live totals + submit -->
   <footer class="dock">
     <div class="dock-stats">
       <div class="ds"><span>Расход</span><strong id="totalSpend">0$</strong></div>
@@ -102,11 +104,12 @@
 
   <template id="geoTemplate">
     <article class="geo-item">
-      <div class="geo-top">
-        <span class="geo-number">#1</span>
-        <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
+      <div class="geo-card-head">
+        <span class="geo-number">ГЕО #1</span>
         <button type="button" class="remove-geo close-btn" aria-label="Удалить">×</button>
       </div>
+
+      <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
 
       <div class="geo-metrics">
         <div class="metric">
@@ -117,10 +120,11 @@
           <label>ПДП</label>
           <input class="pdp-input" type="text" inputmode="decimal" placeholder="40" />
         </div>
-        <div class="metric metric-readonly">
-          <label>Ц/ПДП</label>
-          <div class="avg-output">0$</div>
-        </div>
+      </div>
+
+      <div class="readonly-row">
+        <span class="readonly-label">Ц/ПДП</span>
+        <span class="avg-output">0$</span>
       </div>
 
       <details class="plan-details" open>
@@ -130,6 +134,107 @@
     </article>
   </template>
 
-  <script src="../app.js?v=flow1"></script>
+  <script>
+    // Carousel logic — watches #geoList for changes, syncs counter and dots,
+    // auto-scrolls to newly added items, and lets dots act as nav.
+    (function () {
+      const geoList = document.getElementById('geoList');
+      const dotsEl = document.getElementById('geoDots');
+      const currentEl = document.getElementById('geoCounterCurrent');
+      const totalEl = document.getElementById('geoCounterTotal');
+
+      function items() { return Array.from(geoList.children); }
+
+      function activeIdx() {
+        const arr = items();
+        if (!arr.length) return -1;
+        const containerRect = geoList.getBoundingClientRect();
+        const containerCenter = containerRect.left + containerRect.width / 2;
+        let bestIdx = 0;
+        let bestDist = Infinity;
+        arr.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          const c = r.left + r.width / 2;
+          const d = Math.abs(c - containerCenter);
+          if (d < bestDist) { bestDist = d; bestIdx = i; }
+        });
+        return bestIdx;
+      }
+
+      function renderDots(total, idx) {
+        dotsEl.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'dot' + (i === idx ? ' active' : '');
+          dot.dataset.idx = String(i);
+          dot.setAttribute('aria-label', 'ГЕО ' + (i + 1));
+          dotsEl.appendChild(dot);
+        }
+      }
+
+      function updateUI() {
+        const arr = items();
+        const total = arr.length;
+        const idx = total ? activeIdx() : -1;
+        currentEl.textContent = String(total ? idx + 1 : 0);
+        totalEl.textContent = String(total);
+        renderDots(total, idx);
+      }
+
+      function scrollToIdx(idx) {
+        const arr = items();
+        const el = arr[idx];
+        if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+
+      let scheduled = false;
+      geoList.addEventListener('scroll', () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+          scheduled = false;
+          updateUI();
+        });
+      });
+
+      dotsEl.addEventListener('click', (e) => {
+        const dot = e.target.closest('.dot');
+        if (!dot) return;
+        scrollToIdx(Number(dot.dataset.idx));
+      });
+
+      // When focus moves into a geo-item that is off-screen, snap to it.
+      geoList.addEventListener('focusin', (e) => {
+        const item = e.target.closest('.geo-item');
+        if (!item) return;
+        const rect = item.getBoundingClientRect();
+        const cont = geoList.getBoundingClientRect();
+        if (rect.left < cont.left - 4 || rect.right > cont.right + 4) {
+          item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      });
+
+      let lastCount = 0;
+      const mo = new MutationObserver(() => {
+        const arr = items();
+        if (arr.length > lastCount) {
+          // newly added — scroll to last after a tick
+          const newIdx = arr.length - 1;
+          setTimeout(() => scrollToIdx(newIdx), 30);
+        }
+        lastCount = arr.length;
+        updateUI();
+      });
+      mo.observe(geoList, { childList: true });
+
+      // Initial baseline (app.js may have already added one row by now,
+      // but if not, lastCount=0 and we'll catch the first add.)
+      lastCount = items().length;
+      updateUI();
+    })();
+  </script>
+
+  <script src="../app.js?v=flow2"></script>
 </body>
 </html>
