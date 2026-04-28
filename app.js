@@ -94,6 +94,12 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function openExternal(url) {
+  if (!url) return;
+  if (tg && typeof tg.openLink === "function") tg.openLink(url);
+  else window.open(url, "_blank", "noopener");
+}
+
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = "toast" + (type === "error" ? " toast-error" : type === "success" ? " toast-success" : "");
@@ -484,6 +490,9 @@ function renderAdminCycles(rows) {
     const card = document.createElement("div");
     card.className = "cycle-card" + (r.is_active ? " cycle-card-active" : "");
     const activeMark = r.is_active ? '<span class="badge badge-active">Активный</span>' : "";
+    const jiraHtml = r.jira_url
+      ? `<div class="card-actions"><button class="btn btn-secondary btn-sm jira-link" data-url="${escapeHtml(r.jira_url)}">Открыть в Jira →</button></div>`
+      : "";
     card.innerHTML = `
       <div class="section-head">
         <h3>Цикл ${escapeHtml(r.cycle)} ${activeMark}</h3>
@@ -495,7 +504,10 @@ function renderAdminCycles(rows) {
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
       </div>
       ${breakdownHtml}
+      ${jiraHtml}
     `;
+    const jiraBtn = card.querySelector(".jira-link");
+    if (jiraBtn) jiraBtn.addEventListener("click", () => openExternal(jiraBtn.dataset.url));
     els.adminCyclesList.appendChild(card);
   });
 }
