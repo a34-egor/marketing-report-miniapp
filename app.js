@@ -602,23 +602,60 @@ function renderAdminHistory(rows) {
     els.adminHistoryList.innerHTML = '<div class="empty-state">История пуста</div>';
     return;
   }
+  const MARK = { added: "+", changed: "∆", removed: "−", unchanged: "", initial: "" };
+  function formatStats(spend, pdp) {
+    return `${formatMoney(spend)} · ${formatNumber(pdp)} ПДП`;
+  }
+  function renderItem(it) {
+    const change = it.change || "initial";
+    const marker = MARK[change] || "";
+    const cls = `report-item is-${change}`;
+    const stats = formatStats(it.spend, it.pdp);
+    const planChanged = change === "changed" && it.prev &&
+      String(it.prev.next_cycle_plan || "").trim() !== String(it.next_cycle_plan || "").trim();
+    let prevLine = "";
+    if (change === "changed" && it.prev) {
+      const prevStats = formatStats(it.prev.spend, it.prev.pdp);
+      const numChanged = Number(it.prev.spend || 0) !== Number(it.spend || 0) ||
+                         Number(it.prev.pdp || 0) !== Number(it.pdp || 0);
+      const planBit = planChanged ? `<div class="diff-plan">план: <s>${escapeHtml(it.prev.next_cycle_plan || "—")}</s> → ${escapeHtml(it.next_cycle_plan || "—")}</div>` : "";
+      const numBit = numChanged ? `<div class="diff-prev"><s>${prevStats}</s> → <strong>${stats}</strong></div>` : "";
+      prevLine = numBit + planBit;
+    }
+    const statsBlock = (change === "changed" || change === "removed")
+      ? "" // shown via prevLine or strikethrough container
+      : `<span class="report-item-stats">${stats}</span>`;
+    const removedStats = change === "removed"
+      ? `<span class="report-item-stats"><s>${stats}</s></span>`
+      : "";
+    return `
+      <div class="${cls}">
+        <div class="report-item-row">
+          ${marker ? `<span class="diff-marker">${marker}</span>` : ""}
+          <span class="report-item-name">${escapeHtml(it.geo || "—")}</span>
+          ${statsBlock}
+          ${removedStats}
+        </div>
+        ${prevLine}
+      </div>`;
+  }
+
   els.adminHistoryList.innerHTML = "";
   rows.forEach(r => {
     const items = Array.isArray(r.items) ? r.items : [];
     const itemsHtml = items.length
-      ? `<div class="report-items">${items.map(it => `
-          <div class="report-item">
-            <span class="report-item-name">${escapeHtml(it.geo || "—")}</span>
-            <span class="report-item-stats">${formatMoney(it.spend)} · ${formatNumber(it.pdp)} ПДП</span>
-          </div>`).join("")}</div>`
+      ? `<div class="report-items diff-items">${items.map(renderItem).join("")}</div>`
       : "";
     const who = r.marketer || r.username || r.telegram_id || "—";
     const handle = r.username && r.marketer ? ` (@${r.username})` : "";
+    const versionBadge = r.has_prev
+      ? `<span class="badge badge-neutral">v${Number(r.version) || ""}</span>`
+      : `<span class="badge">Первая версия</span>`;
     const card = document.createElement("div");
     card.className = "history-card";
     card.innerHTML = `
       <div class="section-head">
-        <h3>Цикл ${escapeHtml(r.cycle)}</h3>
+        <h3>Цикл ${escapeHtml(r.cycle)} ${versionBadge}</h3>
         <span class="meta-stamp">${escapeHtml(formatDateTimeShort(r.updated_at))}</span>
       </div>
       <div class="meta-row">
