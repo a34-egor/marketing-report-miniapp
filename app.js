@@ -554,17 +554,36 @@ function renderAdminHistory(rows) {
   });
 }
 
-async function loadContext() {
-  try {
-    const ctx = await apiCall("get_context");
-    state.role = ctx?.role === "admin" ? "admin" : "marketer";
-  } catch {
-    state.role = "marketer";
-  }
+function applyRoleToUI() {
   const isAdmin = state.role === "admin";
   els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
   els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
   renderUserPill();
+}
+
+function roleCacheKey() {
+  return state.telegram_id ? `mr_role_${state.telegram_id}` : null;
+}
+
+async function loadContext() {
+  const key = roleCacheKey();
+  if (key) {
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached === "admin" || cached === "marketer") {
+        state.role = cached;
+        applyRoleToUI();
+      }
+    } catch {}
+  }
+  try {
+    const ctx = await apiCall("get_context");
+    state.role = ctx?.role === "admin" ? "admin" : "marketer";
+    if (key) try { localStorage.setItem(key, state.role); } catch {}
+  } catch {
+    if (!state.role) state.role = "marketer";
+  }
+  applyRoleToUI();
 }
 
 function wireEvents() {
