@@ -554,11 +554,26 @@ function renderAdminHistory(rows) {
   });
 }
 
+let didAutoRoute = false;
+
 function applyRoleToUI() {
   const isAdmin = state.role === "admin";
   els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
   els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
   renderUserPill();
+  autoRouteIfAdmin();
+}
+
+function autoRouteIfAdmin() {
+  if (didAutoRoute) return;
+  if (state.role !== "admin") return;
+  // Skip auto-route if user has already started filling the form
+  if (els.cycle.value || els.geoList.querySelector(".geo-input")?.value) {
+    didAutoRoute = true;
+    return;
+  }
+  didAutoRoute = true;
+  switchTab("admin-cycles");
 }
 
 function roleCacheKey() {
