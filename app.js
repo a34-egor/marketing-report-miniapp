@@ -482,10 +482,11 @@ function renderAdminCycles(rows) {
         </div>`
       : "";
     const card = document.createElement("div");
-    card.className = "cycle-card";
+    card.className = "cycle-card" + (r.is_active ? " cycle-card-active" : "");
+    const activeMark = r.is_active ? '<span class="badge badge-active">Активный</span>' : "";
     card.innerHTML = `
       <div class="section-head">
-        <h3>Цикл ${escapeHtml(r.cycle)}</h3>
+        <h3>Цикл ${escapeHtml(r.cycle)} ${activeMark}</h3>
         <span class="badge">${escapeHtml(badge)}</span>
       </div>
       <div class="kpi-row kpi-row-3">
