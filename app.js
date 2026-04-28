@@ -305,6 +305,16 @@ function validateForm() {
       return fail(`ГЕО #${n}: не указан план`, plan);
     }
   }
+  const seen = new Map();
+  for (let i = 0; i < rows.length; i++) {
+    const geoInput = rows[i].querySelector(".geo-input");
+    const key = geoInput.value.trim().toLowerCase();
+    if (seen.has(key)) {
+      const first = seen.get(key) + 1;
+      return fail(`ГЕО #${i + 1}: "${geoInput.value.trim()}" уже было в строке #${first}`, geoInput);
+    }
+    seen.set(key, i);
+  }
   return null;
 }
 
