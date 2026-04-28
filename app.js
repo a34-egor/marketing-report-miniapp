@@ -100,6 +100,60 @@ function openExternal(url) {
   else window.open(url, "_blank", "noopener");
 }
 
+const DRAFT_KEY_PREFIX = "mr_draft_";
+let saveDraftTimer = null;
+
+function draftKey() {
+  return state.telegram_id ? `${DRAFT_KEY_PREFIX}${state.telegram_id}` : null;
+}
+
+function saveDraft() {
+  if (state.editMode) return;
+  const key = draftKey();
+  if (!key) return;
+  const cycle = els.cycle.value.trim();
+  const items = collectItems();
+  const hasContent = cycle ||
+    items.some(it => it.geo || it.spend || it.pdp || it.next_cycle_plan);
+  try {
+    if (!hasContent) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify({ cycle, items, saved_at: Date.now() }));
+  } catch {}
+}
+
+function scheduleSaveDraft() {
+  clearTimeout(saveDraftTimer);
+  saveDraftTimer = setTimeout(saveDraft, 600);
+}
+
+function clearDraft() {
+  const key = draftKey();
+  if (!key) return;
+  try { localStorage.removeItem(key); } catch {}
+}
+
+function loadDraft() {
+  if (state.editMode) return false;
+  const key = draftKey();
+  if (!key) return false;
+  let draft = null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) draft = JSON.parse(raw);
+  } catch {}
+  if (!draft) return false;
+  const cycle = typeof draft.cycle === "string" ? draft.cycle : "";
+  const items = Array.isArray(draft.items) ? draft.items : [];
+  const hasContent = cycle || items.some(it => it.geo || it.spend || it.pdp || it.next_cycle_plan);
+  if (!hasContent) return false;
+  els.cycle.value = cycle;
+  els.geoList.innerHTML = "";
+  if (items.length) items.forEach(it => addGeoRow(it));
+  else addGeoRow();
+  showToast("Восстановлен черновик");
+  return true;
+}
+
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = "toast" + (type === "error" ? " toast-error" : type === "success" ? " toast-success" : "");
@@ -190,15 +244,18 @@ function wireGeoRow(row) {
     const pdp = parseAmount(pdpInput.value);
     avgOutput.textContent = pdp > 0 ? formatMoney(spend / pdp) : "0$";
     calcTotals();
+    scheduleSaveDraft();
   };
   spendInput.addEventListener("input", updateAvg);
   pdpInput.addEventListener("input", updateAvg);
-  geoInput.addEventListener("input", calcTotals);
+  geoInput.addEventListener("input", () => { calcTotals(); scheduleSaveDraft(); });
+  planInput.addEventListener("input", scheduleSaveDraft);
 
   removeBtn.addEventListener("click", () => {
     row.remove();
     renumberGeoRows();
     calcTotals();
+    scheduleSaveDraft();
   });
 
   return { geoInput, spendInput, pdpInput, planInput, avgOutput };
@@ -352,7 +409,9 @@ async function submitForm() {
       showToast(result.message || "Не удалось сохранить", "error");
       els.submitBtn.textContent = finishedText;
     } else {
-      showToast(state.editMode ? "Изменения сохранены" : "Отчёт отправлен", "success");
+      const wasEdit = state.editMode;
+      showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
+      if (!wasEdit) clearDraft();
       resetForm();
       switchTab("my-reports");
     }
@@ -607,9 +666,11 @@ function wireEvents() {
     if (!btn) return;
     switchTab(btn.dataset.view);
   });
-  els.addGeoBtn.addEventListener("click", () => addGeoRow());
+  els.cycle.addEventListener("input", scheduleSaveDraft);
+  els.addGeoBtn.addEventListener("click", () => { addGeoRow(); scheduleSaveDraft(); });
   els.resetBtn.addEventListener("click", () => {
     if (state.editMode && !confirm("Выйти из режима редактирования без сохранения?")) return;
+    clearDraft();
     resetForm();
   });
   els.previewBtn.addEventListener("click", buildPreview);
@@ -624,7 +685,7 @@ async function init() {
   readTelegramUser();
   renderUserPill();
   wireEvents();
-  addGeoRow();
+  if (!loadDraft()) addGeoRow();
   await loadContext();
 }
 
