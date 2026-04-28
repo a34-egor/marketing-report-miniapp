@@ -88,6 +88,17 @@ function formatDateShort(iso) {
   return `${dd}.${mm}`;
 }
 
+function formatDateTimeShort(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso).slice(0, 16);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}.${mm} ${hh}:${mi}`;
+}
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -593,21 +604,32 @@ function renderAdminHistory(rows) {
   }
   els.adminHistoryList.innerHTML = "";
   rows.forEach(r => {
+    const items = Array.isArray(r.items) ? r.items : [];
+    const itemsHtml = items.length
+      ? `<div class="report-items">${items.map(it => `
+          <div class="report-item">
+            <span class="report-item-name">${escapeHtml(it.geo || "—")}</span>
+            <span class="report-item-stats">${formatMoney(it.spend)} · ${formatNumber(it.pdp)} ПДП</span>
+          </div>`).join("")}</div>`
+      : "";
+    const who = r.marketer || r.username || r.telegram_id || "—";
+    const handle = r.username && r.marketer ? ` (@${r.username})` : "";
     const card = document.createElement("div");
     card.className = "history-card";
     card.innerHTML = `
       <div class="section-head">
         <h3>Цикл ${escapeHtml(r.cycle)}</h3>
-        <span class="badge">${Number(r.total_geo) || 0} ГЕО</span>
+        <span class="meta-stamp">${escapeHtml(formatDateTimeShort(r.updated_at))}</span>
       </div>
       <div class="meta-row">
-        <span>${escapeHtml(r.marketer || r.username || r.telegram_id || "—")}</span>
-        <span>${escapeHtml(r.updated_at || "—")}</span>
+        <span>${escapeHtml(who + handle)}</span>
       </div>
-      <div class="kpi-row">
+      <div class="kpi-row kpi-row-3">
+        <div class="kpi"><span>ГЕО</span><strong>${Number(r.total_geo) || 0}</strong></div>
         <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
         <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong></div>
       </div>
+      ${itemsHtml}
     `;
     els.adminHistoryList.appendChild(card);
   });
