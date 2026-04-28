@@ -452,19 +452,48 @@ function renderAdminCycles(rows) {
   }
   els.adminCyclesList.innerHTML = "";
   rows.forEach(r => {
+    const filled = Array.isArray(r.filled) ? r.filled : [];
+    const missing = Array.isArray(r.missing) ? r.missing : [];
+    const total = Number(r.marketers_total) || (filled.length + missing.length);
+    const badge = total
+      ? `${filled.length}/${total} сдали`
+      : `${Number(r.marketers_count) || 0} маркетологов`;
+    const renderName = (m) => {
+      const name = escapeHtml(m.name || m.username || m.telegram_id || "—");
+      const handle = m.username && m.name ? ` <span class="status-meta">@${escapeHtml(m.username)}</span>` : "";
+      return name + handle;
+    };
+    const filledHtml = filled.length
+      ? filled.map(m => `<div class="status-row status-filled"><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`).join("")
+      : '<div class="status-row status-empty">— никто</div>';
+    const missingHtml = missing.length
+      ? missing.map(m => `<div class="status-row status-missing"><span class="status-mark">❌</span><span>${renderName(m)}</span></div>`).join("")
+      : '<div class="status-row status-empty">— все сдали 🎉</div>';
+    const breakdownHtml = total
+      ? `<div class="status-list">
+          <div class="status-group">
+            <div class="status-group-title">Сдали (${filled.length})</div>
+            ${filledHtml}
+          </div>
+          <div class="status-group">
+            <div class="status-group-title">Не сдали (${missing.length})</div>
+            ${missingHtml}
+          </div>
+        </div>`
+      : "";
     const card = document.createElement("div");
     card.className = "cycle-card";
     card.innerHTML = `
       <div class="section-head">
         <h3>Цикл ${escapeHtml(r.cycle)}</h3>
-        <span class="badge">${Number(r.marketers_count) || 0} маркетологов</span>
+        <span class="badge">${escapeHtml(badge)}</span>
       </div>
-      <div class="kpi-row">
+      <div class="kpi-row kpi-row-3">
         <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
         <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong></div>
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
-        <div class="kpi"><span>ГЕО</span><strong>${Number(r.total_geo) || 0}</strong></div>
       </div>
+      ${breakdownHtml}
     `;
     els.adminCyclesList.appendChild(card);
   });
