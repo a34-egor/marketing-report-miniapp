@@ -301,6 +301,30 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
   color:var(--muted);text-align:center;font-size:13px
 }
 
+.denied-view{justify-items:center}
+.denied-card{
+  text-align:center;
+  padding:32px 24px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  max-width:420px;margin:24px auto;
+  display:grid;gap:14px
+}
+.denied-icon{font-size:48px;line-height:1}
+.denied-card h2{font-size:20px;font-weight:700;margin:0}
+.denied-card p{margin:0;color:var(--text-dim);line-height:1.5;font-size:14px}
+.denied-card .denied-meta{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;color:var(--muted);
+  padding:6px 10px;
+  background:var(--surface-3);
+  border-radius:var(--radius-sm);
+  display:inline-block;justify-self:center
+}
+.denied-card a{color:var(--accent);text-decoration:none;font-weight:600}
+.denied-card a:hover{text-decoration:underline}
+
 /* Report item rows (inside my-reports cards) */
 .report-items{
   display:grid;gap:4px;

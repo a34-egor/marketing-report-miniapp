@@ -676,8 +676,27 @@ let didAutoRoute = false;
 
 function applyRoleToUI() {
   const isAdmin = state.role === "admin";
-  els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
-  els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
+  const isDenied = state.role === "denied";
+  els.adminCyclesTab.classList.toggle("hidden", !isAdmin || isDenied);
+  els.adminHistoryTab.classList.toggle("hidden", !isAdmin || isDenied);
+  els.tabs.classList.toggle("hidden", isDenied);
+  if (isDenied) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    const denied = document.getElementById("view-denied");
+    if (denied) denied.classList.add("active");
+    const hint = document.getElementById("deniedHint");
+    if (hint) {
+      const who = state.username ? `@${state.username}` : "";
+      const tid = state.telegram_id ? `ID ${state.telegram_id}` : "";
+      hint.textContent = [who, tid].filter(Boolean).join(" · ");
+    }
+  } else {
+    const denied = document.getElementById("view-denied");
+    if (denied && denied.classList.contains("active")) {
+      denied.classList.remove("active");
+      switchTab(isAdmin ? "admin-cycles" : "new-report");
+    }
+  }
   renderUserPill();
   autoRouteIfAdmin();
 }
@@ -700,10 +719,11 @@ function roleCacheKey() {
 
 async function loadContext() {
   const key = roleCacheKey();
+  const validRoles = new Set(["admin", "marketer", "denied"]);
   if (key) {
     try {
       const cached = localStorage.getItem(key);
-      if (cached === "admin" || cached === "marketer") {
+      if (validRoles.has(cached)) {
         state.role = cached;
         applyRoleToUI();
       }
@@ -711,7 +731,8 @@ async function loadContext() {
   }
   try {
     const ctx = await apiCall("get_context");
-    state.role = ctx?.role === "admin" ? "admin" : "marketer";
+    const role = ctx?.role;
+    state.role = validRoles.has(role) ? role : "marketer";
     if (key) try { localStorage.setItem(key, state.role); } catch {}
   } catch {
     if (!state.role) state.role = "marketer";
