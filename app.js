@@ -490,11 +490,13 @@ function renderMyReports(rows) {
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
       </div>
       ${itemsHtml}
+      ${r.editable === false ? "" : `
       <div class="card-actions">
         <button class="btn btn-secondary btn-sm" data-edit="${escapeHtml(r.report_key)}">Редактировать</button>
-      </div>
+      </div>`}
     `;
-    card.querySelector("[data-edit]").addEventListener("click", () => openReportForEdit(r.report_key));
+    const editBtn = card.querySelector("[data-edit]");
+    if (editBtn) editBtn.addEventListener("click", () => openReportForEdit(r.report_key));
     els.myReportsList.appendChild(card);
   });
 }
