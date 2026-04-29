@@ -301,29 +301,46 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
   color:var(--muted);text-align:center;font-size:13px
 }
 
-.denied-view{justify-items:center}
-.denied-card{
-  text-align:center;
-  padding:32px 24px;
-  background:var(--surface);
-  border:1px solid var(--line);
-  border-radius:var(--radius-lg);
-  max-width:420px;margin:24px auto;
-  display:grid;gap:14px
+/* Boot screen — covers everything until role resolves */
+.boot-screen{
+  position:fixed;inset:0;z-index:50;
+  display:none;align-items:center;justify-content:center;
+  padding:24px;
+  background:var(--bg);
+  background-image:var(--bg-grad);
 }
-.denied-icon{font-size:48px;line-height:1}
-.denied-card h2{font-size:20px;font-weight:700;margin:0}
-.denied-card p{margin:0;color:var(--text-dim);line-height:1.5;font-size:14px}
-.denied-card .denied-meta{
+body.app-loading .boot-screen,
+body.app-denied .boot-screen{display:flex}
+body.app-loading .app,
+body.app-denied .app{display:none!important}
+
+.boot-loading{display:none;align-items:center;justify-content:center}
+body.app-loading .boot-loading{display:flex}
+.boot-spinner{
+  width:32px;height:32px;
+  border:3px solid var(--line-strong);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:btn-spin 0.8s linear infinite;
+}
+
+.boot-denied{display:none;text-align:center;max-width:420px;width:100%}
+body.app-denied .boot-denied{display:block}
+.boot-denied .denied-icon{font-size:48px;line-height:1;margin-bottom:14px}
+.boot-denied h2{font-size:20px;font-weight:700;margin:0 0 10px}
+.boot-denied p{margin:0 0 10px;color:var(--text-dim);line-height:1.5;font-size:14px}
+.boot-denied .denied-meta{
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:12px;color:var(--muted);
   padding:6px 10px;
-  background:var(--surface-3);
+  background:var(--surface);
+  border:1px solid var(--line);
   border-radius:var(--radius-sm);
-  display:inline-block;justify-self:center
+  display:inline-block;
+  margin-bottom:14px
 }
-.denied-card a{color:var(--accent);text-decoration:none;font-weight:600}
-.denied-card a:hover{text-decoration:underline}
+.boot-denied a{color:var(--accent);text-decoration:none;font-weight:600}
+.boot-denied a:hover{text-decoration:underline}
 
 /* Report item rows (inside my-reports cards) */
 .report-items{

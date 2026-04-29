@@ -5,11 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Marketing Report</title>
   <meta name="theme-color" content="#0a0f1c" />
-  <link rel="stylesheet" href="./styles.css?v=218" />
+  <link rel="stylesheet" href="./styles.css?v=219" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body>
+<body class="app-loading">
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <div id="bootScreen" class="boot-screen">
+    <div class="boot-loading">
+      <div class="boot-spinner" aria-hidden="true"></div>
+    </div>
+    <div class="boot-denied">
+      <div class="denied-icon">🚫</div>
+      <h2>Нет доступа</h2>
+      <p>Mini App доступен только маркетологам и администраторам команды.</p>
+      <p class="denied-meta" id="deniedHint"></p>
+      <p class="denied-hint">Если ты должен иметь доступ — напиши <a href="https://t.me/a34_egor">@a34_egor</a>.</p>
+    </div>
+  </div>
 
   <div class="app">
     <header class="header">
@@ -101,16 +114,6 @@
         </section>
       </section>
 
-      <section id="view-denied" class="view denied-view">
-        <div class="denied-card">
-          <div class="denied-icon">🚫</div>
-          <h2>Нет доступа</h2>
-          <p>Mini App доступен только маркетологам и администраторам команды.</p>
-          <p class="denied-meta" id="deniedHint"></p>
-          <p class="denied-hint">Если ты должен иметь доступ — напиши администратору <a id="deniedAdminLink" href="https://t.me/a34_egor">@a34_egor</a>.</p>
-        </div>
-      </section>
-
       <section id="previewCard" class="card preview hidden">
         <div class="section-head">
           <h2>Предпросмотр</h2>
@@ -151,6 +154,6 @@
     </article>
   </template>
 
-  <script src="./app.js?v=218"></script>
+  <script src="./app.js?v=219"></script>
 </body>
 </html>

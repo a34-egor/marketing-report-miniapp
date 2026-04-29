@@ -677,24 +677,18 @@ let didAutoRoute = false;
 function applyRoleToUI() {
   const isAdmin = state.role === "admin";
   const isDenied = state.role === "denied";
-  els.adminCyclesTab.classList.toggle("hidden", !isAdmin || isDenied);
-  els.adminHistoryTab.classList.toggle("hidden", !isAdmin || isDenied);
-  els.tabs.classList.toggle("hidden", isDenied);
+  const isOk = isAdmin || state.role === "marketer";
+  document.body.classList.toggle("app-loading", !isOk && !isDenied);
+  document.body.classList.toggle("app-denied", isDenied);
+  document.body.classList.toggle("app-ok", isOk);
+  els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
+  els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
   if (isDenied) {
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    const denied = document.getElementById("view-denied");
-    if (denied) denied.classList.add("active");
     const hint = document.getElementById("deniedHint");
     if (hint) {
       const who = state.username ? `@${state.username}` : "";
       const tid = state.telegram_id ? `ID ${state.telegram_id}` : "";
       hint.textContent = [who, tid].filter(Boolean).join(" · ");
-    }
-  } else {
-    const denied = document.getElementById("view-denied");
-    if (denied && denied.classList.contains("active")) {
-      denied.classList.remove("active");
-      switchTab(isAdmin ? "admin-cycles" : "new-report");
     }
   }
   renderUserPill();
