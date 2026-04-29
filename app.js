@@ -683,14 +683,6 @@ function applyRoleToUI() {
   document.body.classList.toggle("app-ok", isOk);
   els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
   els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
-  if (isDenied) {
-    const hint = document.getElementById("deniedHint");
-    if (hint) {
-      const who = state.username ? `@${state.username}` : "";
-      const tid = state.telegram_id ? `ID ${state.telegram_id}` : "";
-      hint.textContent = [who, tid].filter(Boolean).join(" · ");
-    }
-  }
   renderUserPill();
   autoRouteIfAdmin();
 }
