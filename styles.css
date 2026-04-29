@@ -270,6 +270,7 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
 
 /* Lists (my reports / admin cards) */
 .list-wrap{display:grid;gap:10px}
+.view-toolbar{display:flex;justify-content:flex-end;padding:2px 0}
 .report-card,.cycle-card,.history-card{
   border:1px solid var(--line);
   border-radius:var(--radius-md);

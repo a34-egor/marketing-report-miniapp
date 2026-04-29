@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Marketing Report</title>
   <meta name="theme-color" content="#0a0f1c" />
-  <link rel="stylesheet" href="./styles.css?v=221" />
+  <link rel="stylesheet" href="./styles.css?v=222" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="app-loading">
@@ -76,39 +76,30 @@
       </section>
 
       <section id="view-my-reports" class="view">
-        <section class="card">
-          <div class="section-head">
-            <h2>Мои отчёты</h2>
-            <button id="refreshMyReportsBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
-          </div>
-          <div id="myReportsList" class="list-wrap">
-            <div class="empty-state">Загрузка…</div>
-          </div>
-        </section>
+        <div class="view-toolbar">
+          <button id="refreshMyReportsBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+        </div>
+        <div id="myReportsList" class="list-wrap">
+          <div class="empty-state">Загрузка…</div>
+        </div>
       </section>
 
       <section id="view-admin-cycles" class="view">
-        <section class="card">
-          <div class="section-head">
-            <h2>Циклы</h2>
-            <button id="refreshAdminCyclesBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
-          </div>
-          <div id="adminCyclesList" class="list-wrap">
-            <div class="empty-state">Загрузка…</div>
-          </div>
-        </section>
+        <div class="view-toolbar">
+          <button id="refreshAdminCyclesBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+        </div>
+        <div id="adminCyclesList" class="list-wrap">
+          <div class="empty-state">Загрузка…</div>
+        </div>
       </section>
 
       <section id="view-admin-history" class="view">
-        <section class="card">
-          <div class="section-head">
-            <h2>История изменений</h2>
-            <button id="refreshAdminHistoryBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
-          </div>
-          <div id="adminHistoryList" class="list-wrap">
-            <div class="empty-state">Загрузка…</div>
-          </div>
-        </section>
+        <div class="view-toolbar">
+          <button id="refreshAdminHistoryBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+        </div>
+        <div id="adminHistoryList" class="list-wrap">
+          <div class="empty-state">Загрузка…</div>
+        </div>
       </section>
 
       <section id="previewCard" class="card preview hidden">
@@ -151,6 +142,6 @@
     </article>
   </template>
 
-  <script src="./app.js?v=221"></script>
+  <script src="./app.js?v=222"></script>
 </body>
 </html>
