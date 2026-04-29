@@ -111,6 +111,19 @@ function openExternal(url) {
   else window.open(url, "_blank", "noopener");
 }
 
+function openTgLink(url) {
+  if (!url) return;
+  if (tg && typeof tg.openTelegramLink === "function") {
+    tg.openTelegramLink(url);
+    return;
+  }
+  if (tg && typeof tg.openLink === "function") {
+    tg.openLink(url);
+    return;
+  }
+  window.open(url, "_blank", "noopener");
+}
+
 const DRAFT_KEY_PREFIX = "mr_draft_";
 let saveDraftTimer = null;
 
@@ -535,9 +548,13 @@ function renderAdminCycles(rows) {
       ? `${filled.length}/${total} сдали`
       : `${Number(r.marketers_count) || 0} маркетологов`;
     const renderName = (m) => {
-      const name = escapeHtml(m.name || m.username || m.telegram_id || "—");
-      const handle = m.username && m.name ? ` <span class="status-meta">@${escapeHtml(m.username)}</span>` : "";
-      return name + handle;
+      const tgLink = (uname) =>
+        `<a class="tg-link" data-tg="${escapeHtml(uname)}" href="https://t.me/${escapeHtml(uname)}">@${escapeHtml(uname)}</a>`;
+      if (m.name && m.username) {
+        return escapeHtml(m.name) + ` <span class="status-meta">${tgLink(m.username)}</span>`;
+      }
+      if (m.username) return tgLink(m.username);
+      return escapeHtml(m.name || m.telegram_id || "—");
     };
     const filledHtml = filled.length
       ? filled.map(m => `<div class="status-row status-filled"><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`).join("")
@@ -646,8 +663,13 @@ function renderAdminHistory(rows) {
     const itemsHtml = items.length
       ? `<div class="report-items diff-items">${items.map(renderItem).join("")}</div>`
       : "";
-    const who = r.marketer || r.username || r.telegram_id || "—";
-    const handle = r.username && r.marketer ? ` (@${r.username})` : "";
+    const tgLink = r.username
+      ? `<a class="tg-link" data-tg="${escapeHtml(r.username)}" href="https://t.me/${escapeHtml(r.username)}">@${escapeHtml(r.username)}</a>`
+      : "";
+    let whoHtml;
+    if (r.marketer && r.username) whoHtml = `${escapeHtml(r.marketer)} (${tgLink})`;
+    else if (r.username) whoHtml = tgLink;
+    else whoHtml = escapeHtml(r.marketer || r.telegram_id || "—");
     const versionBadge = r.has_prev
       ? `<span class="badge badge-neutral">v${Number(r.version) || ""}</span>`
       : `<span class="badge">Первая версия</span>`;
@@ -659,7 +681,7 @@ function renderAdminHistory(rows) {
         <span class="meta-stamp">${escapeHtml(formatDateTimeShort(r.updated_at))}</span>
       </div>
       <div class="meta-row">
-        <span>${escapeHtml(who + handle)}</span>
+        <span>${whoHtml}</span>
       </div>
       <div class="kpi-row kpi-row-3">
         <div class="kpi"><span>ГЕО</span><strong>${Number(r.total_geo) || 0}</strong></div>
@@ -727,6 +749,13 @@ async function loadContext() {
 }
 
 function wireEvents() {
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest(".tg-link");
+    if (!link) return;
+    e.preventDefault();
+    const uname = link.dataset.tg;
+    if (uname) openTgLink(`https://t.me/${uname}`);
+  });
   els.tabs.addEventListener("click", (e) => {
     const btn = e.target.closest(".tab-btn");
     if (!btn) return;
