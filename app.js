@@ -332,13 +332,27 @@ function calcTotals() {
   els.totalAvg.textContent = totalPdp > 0 ? formatMoney(totalSpend / totalPdp) : "0$";
 }
 
-function setEditMode(on, reportKey = null) {
+function setEditMode(on, reportKey = null, marketerInfo = null) {
   state.editMode = on;
   state.currentReportKey = reportKey;
+  state.editingMarketer = marketerInfo;
   els.editingReportKey.value = reportKey || "";
   els.editBadge.classList.toggle("hidden", !on);
-  els.formTitle.textContent = on ? "Редактирование отчёта" : "Новый отчёт";
+  if (on && marketerInfo && marketerInfo.name) {
+    els.formTitle.textContent = `Редактирование · ${marketerInfo.name}`;
+  } else if (on && marketerInfo && marketerInfo.username) {
+    els.formTitle.textContent = `Редактирование · @${marketerInfo.username}`;
+  } else {
+    els.formTitle.textContent = on ? "Редактирование отчёта" : "Новый отчёт";
+  }
   els.submitBtn.textContent = on ? "Сохранить" : "Отправить";
+  // Tab label changes for everyone; visibility toggled only for admin role
+  if (els.newReportTab) {
+    els.newReportTab.textContent = on ? "Редактирование" : "Новый";
+    if (state.role === "admin") {
+      els.newReportTab.classList.toggle("hidden", !on);
+    }
+  }
 }
 
 function resetForm() {
@@ -439,7 +453,8 @@ async function submitForm() {
       showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
       if (!wasEdit) clearDraft();
       resetForm();
-      switchTab("my-reports");
+      // Admin doesn't have "Мои отчёты" — send back to Циклы
+      switchTab(state.role === "admin" ? "admin-cycles" : "my-reports");
     }
   } catch (e) {
     showToast(`Ошибка отправки: ${e.message}`, "error");
@@ -503,19 +518,27 @@ function renderMyReports(rows) {
   });
 }
 
-async function openReportForEdit(reportKey) {
+async function openReportForEdit(reportKey, marketerInfo = null) {
   try {
     const data = await apiCall("get_report_details", { report_key: reportKey });
     if (!data || data.ok === false) {
       showToast(data?.message || "Отчёт не найден", "error");
       return;
     }
+    // If marketerInfo not passed but data has it, build from response
+    const info = marketerInfo || (data.marketer || data.username ? {
+      name: data.marketer || "",
+      username: data.username || ""
+    } : null);
+    // For self-edit, drop marketer label (it's their own report)
+    const isSelf = info && state.telegram_id && data.telegram_id &&
+                   String(state.telegram_id) === String(data.telegram_id);
     els.cycle.value = data.cycle || "";
     els.geoList.innerHTML = "";
     const items = Array.isArray(data.items) ? data.items : [];
     if (items.length) items.forEach(it => addGeoRow(it));
     else addGeoRow();
-    setEditMode(true, data.report_key || reportKey);
+    setEditMode(true, data.report_key || reportKey, isSelf ? null : info);
     switchTab("new-report");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e) {
@@ -563,8 +586,10 @@ function renderAdminCycles(rows) {
     const filledHtml = filled.length
       ? filled.map(m => {
           const rk = m.report_key || "";
-          const editable = rk ? ` data-edit-report="${escapeHtml(rk)}" role="button" tabindex="0"` : "";
-          return `<div class="status-row status-filled${rk ? ' status-clickable' : ''}"${editable}><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`;
+          const attrs = rk
+            ? ` data-edit-report="${escapeHtml(rk)}" data-edit-name="${escapeHtml(m.name || "")}" data-edit-username="${escapeHtml(m.username || "")}" role="button" tabindex="0"`
+            : "";
+          return `<div class="status-row status-filled${rk ? ' status-clickable' : ''}"${attrs}><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`;
         }).join("")
       : '<div class="status-row status-empty">— никто</div>';
     const missingHtml = missing.length
@@ -607,7 +632,10 @@ function renderAdminCycles(rows) {
       el.addEventListener("click", (e) => {
         if (e.target.closest(".tg-link")) return; // username link → TG chat, not edit
         const rk = el.dataset.editReport;
-        if (rk) openReportForEdit(rk);
+        if (rk) openReportForEdit(rk, {
+          name: el.dataset.editName || "",
+          username: el.dataset.editUsername || ""
+        });
       });
     });
     els.adminCyclesList.appendChild(card);
@@ -786,8 +814,11 @@ function wireEvents() {
   els.addGeoBtn.addEventListener("click", () => { addGeoRow(); scheduleSaveDraft(); });
   els.resetBtn.addEventListener("click", () => {
     if (state.editMode && !confirm("Выйти из режима редактирования без сохранения?")) return;
+    const wasEditing = state.editMode;
     clearDraft();
     resetForm();
+    // For admin: only after exiting an edit, return to Циклы (admin has no Новый/Мои tabs)
+    if (wasEditing && state.role === "admin") switchTab("admin-cycles");
   });
   els.previewBtn.addEventListener("click", buildPreview);
   els.closePreviewBtn.addEventListener("click", () => els.previewCard.classList.add("hidden"));
