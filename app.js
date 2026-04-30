@@ -23,6 +23,8 @@ const $ = (id) => document.getElementById(id);
 const els = {
   userPill: $("userPill"),
   tabs: $("topTabs"),
+  newReportTab: $("newReportTab"),
+  myReportsTab: $("myReportsTab"),
   adminCyclesTab: $("adminCyclesTab"),
   adminHistoryTab: $("adminHistoryTab"),
   formTitle: $("formTitle"),
@@ -711,13 +713,19 @@ let didAutoRoute = false;
 
 function applyRoleToUI() {
   const isAdmin = state.role === "admin";
+  const isSuperAdmin = state.role === "superadmin";
+  const isMarketer = state.role === "marketer";
   const isDenied = state.role === "denied";
-  const isOk = isAdmin || state.role === "marketer";
+  const isOk = isAdmin || isSuperAdmin || isMarketer;
   document.body.classList.toggle("app-loading", !isOk && !isDenied);
   document.body.classList.toggle("app-denied", isDenied);
   document.body.classList.toggle("app-ok", isOk);
-  els.adminCyclesTab.classList.toggle("hidden", !isAdmin);
-  els.adminHistoryTab.classList.toggle("hidden", !isAdmin);
+  // Marketer-side tabs visible to marketer + superadmin (admin-only sees just admin tabs)
+  els.newReportTab.classList.toggle("hidden", isAdmin);
+  els.myReportsTab.classList.toggle("hidden", isAdmin);
+  // Admin-side tabs visible to admin + superadmin
+  els.adminCyclesTab.classList.toggle("hidden", !(isAdmin || isSuperAdmin));
+  els.adminHistoryTab.classList.toggle("hidden", !(isAdmin || isSuperAdmin));
   renderUserPill();
   autoRouteIfAdmin();
 }
@@ -740,7 +748,7 @@ function roleCacheKey() {
 
 async function loadContext() {
   const key = roleCacheKey();
-  const validRoles = new Set(["admin", "marketer", "denied"]);
+  const validRoles = new Set(["admin", "superadmin", "marketer", "denied"]);
   if (key) {
     try {
       const cached = localStorage.getItem(key);
