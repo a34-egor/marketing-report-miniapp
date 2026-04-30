@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Marketing Report</title>
   <meta name="theme-color" content="#0a0f1c" />
-  <link rel="stylesheet" href="./styles.css?v=228" />
+  <link rel="stylesheet" href="./styles.css?v=229" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="app-loading">
@@ -77,7 +77,8 @@
 
       <section id="view-my-reports" class="view">
         <div class="view-toolbar">
-          <button id="refreshMyReportsBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+          <input id="searchMyReports" class="view-search" type="search" placeholder="Поиск (цикл)…" />
+          <button id="refreshMyReportsBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
         </div>
         <div id="myReportsList" class="list-wrap">
           <div class="empty-state">Загрузка…</div>
@@ -86,7 +87,8 @@
 
       <section id="view-admin-cycles" class="view">
         <div class="view-toolbar">
-          <button id="refreshAdminCyclesBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+          <input id="searchAdminCycles" class="view-search" type="search" placeholder="Поиск (цикл, маркетолог)…" />
+          <button id="refreshAdminCyclesBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
         </div>
         <div id="adminCyclesList" class="list-wrap">
           <div class="empty-state">Загрузка…</div>
@@ -95,7 +97,8 @@
 
       <section id="view-admin-history" class="view">
         <div class="view-toolbar">
-          <button id="refreshAdminHistoryBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻ Обновить</button>
+          <input id="searchAdminHistory" class="view-search" type="search" placeholder="Поиск (цикл, маркетолог)…" />
+          <button id="refreshAdminHistoryBtn" type="button" class="btn btn-secondary btn-sm" aria-label="Обновить">↻</button>
         </div>
         <div id="adminHistoryList" class="list-wrap">
           <div class="empty-state">Загрузка…</div>
@@ -142,6 +145,6 @@
     </article>
   </template>
 
-  <script src="./app.js?v=228"></script>
+  <script src="./app.js?v=229"></script>
 </body>
 </html>

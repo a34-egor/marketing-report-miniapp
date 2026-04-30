@@ -9,6 +9,25 @@ if (tg) {
   try { tg.expand(); } catch {}
 }
 
+const useNativeMainButton = !!(tg && tg.MainButton);
+function showMainButton(text) {
+  if (!useNativeMainButton) return;
+  if (text) tg.MainButton.setText(text);
+  tg.MainButton.show();
+}
+function hideMainButton() {
+  if (!useNativeMainButton) return;
+  tg.MainButton.hide();
+}
+function setMainButtonLoading(on) {
+  if (!useNativeMainButton) return;
+  if (on) tg.MainButton.showProgress();
+  else tg.MainButton.hideProgress();
+}
+function haptic(kind) {
+  try { tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred(kind); } catch {}
+}
+
 const state = {
   role: "marketer",
   telegram_id: "",
@@ -43,10 +62,13 @@ const els = {
   submitBtn: $("submitBtn"),
   myReportsList: $("myReportsList"),
   refreshMyReportsBtn: $("refreshMyReportsBtn"),
+  searchMyReports: $("searchMyReports"),
   adminCyclesList: $("adminCyclesList"),
   refreshAdminCyclesBtn: $("refreshAdminCyclesBtn"),
+  searchAdminCycles: $("searchAdminCycles"),
   adminHistoryList: $("adminHistoryList"),
   refreshAdminHistoryBtn: $("refreshAdminHistoryBtn"),
+  searchAdminHistory: $("searchAdminHistory"),
   previewCard: $("previewCard"),
   previewText: $("previewText"),
   closePreviewBtn: $("closePreviewBtn"),
@@ -88,6 +110,16 @@ function formatDateShort(iso) {
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   return `${dd}.${mm}`;
+}
+
+function renderDelta(pct) {
+  if (pct == null || !Number.isFinite(Number(pct))) return "";
+  const v = Number(pct);
+  if (Math.abs(v) < 0.05) return `<span class="delta delta-zero">=</span>`;
+  const cls = v > 0 ? "delta-up" : "delta-down";
+  const arrow = v > 0 ? "↑" : "↓";
+  const abs = Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0).replace(/\.0$/, "");
+  return `<span class="delta ${cls}">${arrow} ${abs}%</span>`;
 }
 
 function formatDateTimeShort(iso) {
@@ -244,6 +276,11 @@ function switchTab(view) {
   document.querySelectorAll(".view").forEach(v => {
     v.classList.toggle("active", v.id === `view-${view}`);
   });
+  if (view === "new-report") {
+    showMainButton(state.editMode ? "Сохранить" : "Отправить");
+  } else {
+    hideMainButton();
+  }
   if (view === "my-reports") loadMyReports();
   else if (view === "admin-cycles") loadAdminCycles();
   else if (view === "admin-history") loadAdminHistory();
@@ -346,6 +383,10 @@ function setEditMode(on, reportKey = null, marketerInfo = null) {
     els.formTitle.textContent = on ? "Редактирование отчёта" : "Новый отчёт";
   }
   els.submitBtn.textContent = on ? "Сохранить" : "Отправить";
+  // Sync MainButton text if visible
+  if (useNativeMainButton && document.getElementById("view-new-report")?.classList.contains("active")) {
+    showMainButton(on ? "Сохранить" : "Отправить");
+  }
   // Tab label changes for everyone; visibility toggled only for admin role
   if (els.newReportTab) {
     els.newReportTab.textContent = on ? "Редактирование" : "Новый";
@@ -423,8 +464,14 @@ function validateForm() {
 
 async function submitForm() {
   const error = validateForm();
-  if (error) return showToast(error, "error");
-  if (!state.telegram_id) return showToast("Не удалось определить Telegram ID — открой форму через Telegram", "error");
+  if (error) {
+    haptic("error");
+    return showToast(error, "error");
+  }
+  if (!state.telegram_id) {
+    haptic("error");
+    return showToast("Не удалось определить Telegram ID — открой форму через Telegram", "error");
+  }
 
   const payload = {
     telegram_id: state.telegram_id,
@@ -441,6 +488,7 @@ async function submitForm() {
   els.submitBtn.classList.add("is-loading");
   els.submitBtn.textContent = loadingText;
   els.submitBtn.disabled = true;
+  setMainButtonLoading(true);
   try {
     const result = state.editMode
       ? await apiCall("save_report_edit", payload)
@@ -448,9 +496,11 @@ async function submitForm() {
     if (result && result.ok === false) {
       showToast(result.message || "Не удалось сохранить", "error");
       els.submitBtn.textContent = finishedText;
+      haptic("error");
     } else {
       const wasEdit = state.editMode;
       showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
+      haptic("success");
       if (!wasEdit) clearDraft();
       resetForm();
       // Admin doesn't have "Мои отчёты" — send back to Циклы
@@ -459,10 +509,25 @@ async function submitForm() {
   } catch (e) {
     showToast(`Ошибка отправки: ${e.message}`, "error");
     els.submitBtn.textContent = finishedText;
+    haptic("error");
   } finally {
     els.submitBtn.classList.remove("is-loading");
     els.submitBtn.disabled = false;
+    setMainButtonLoading(false);
   }
+}
+
+let cachedMyReports = [];
+let cachedAdminCycles = [];
+let cachedAdminHistory = [];
+
+function filterByQuery(rows, q, fields) {
+  const s = String(q || "").toLowerCase().trim();
+  if (!s) return rows;
+  return rows.filter(r => fields.some(f => {
+    const v = f(r);
+    return v && String(v).toLowerCase().includes(s);
+  }));
 }
 
 async function loadMyReports() {
@@ -470,7 +535,8 @@ async function loadMyReports() {
   try {
     const data = await apiCall("get_my_reports");
     const rows = Array.isArray(data?.reports) ? data.reports : (Array.isArray(data) ? data : []);
-    renderMyReports(rows);
+    cachedMyReports = rows;
+    renderMyReports(filterByQuery(rows, els.searchMyReports?.value, [r => r.cycle, r => r.marketer]));
   } catch (e) {
     els.myReportsList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
   }
@@ -556,7 +622,12 @@ async function loadAdminCycles() {
       return;
     }
     const rows = Array.isArray(data?.cycles) ? data.cycles : (Array.isArray(data) ? data : []);
-    renderAdminCycles(rows);
+    cachedAdminCycles = rows;
+    renderAdminCycles(filterByQuery(rows, els.searchAdminCycles?.value, [
+      r => r.cycle,
+      r => (r.filled || []).map(m => `${m.name} ${m.username}`).join(" "),
+      r => (r.missing || []).map(m => `${m.name} ${m.username}`).join(" "),
+    ]));
   } catch (e) {
     els.adminCyclesList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
   }
@@ -620,8 +691,8 @@ function renderAdminCycles(rows) {
         <span class="badge">${escapeHtml(badge)}</span>
       </div>
       <div class="kpi-row kpi-row-3">
-        <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
-        <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong></div>
+        <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong>${renderDelta(r.spend_delta_pct)}</div>
+        <div class="kpi"><span>ПДП</span><strong>${formatNumber(r.total_pdp)}</strong>${renderDelta(r.pdp_delta_pct)}</div>
         <div class="kpi"><span>Ц/ПДП</span><strong>${formatMoney(r.avg_pdp_cost)}</strong></div>
       </div>
       ${breakdownHtml}
@@ -652,7 +723,10 @@ async function loadAdminHistory() {
       return;
     }
     const rows = Array.isArray(data?.history) ? data.history : (Array.isArray(data) ? data : []);
-    renderAdminHistory(rows);
+    cachedAdminHistory = rows;
+    renderAdminHistory(filterByQuery(rows, els.searchAdminHistory?.value, [
+      r => r.cycle, r => r.marketer, r => r.username
+    ]));
   } catch (e) {
     els.adminHistoryList.innerHTML = `<div class="empty-state">Ошибка: ${escapeHtml(e.message)}</div>`;
   }
@@ -827,6 +901,25 @@ function wireEvents() {
   els.refreshMyReportsBtn.addEventListener("click", loadMyReports);
   els.refreshAdminCyclesBtn.addEventListener("click", loadAdminCycles);
   els.refreshAdminHistoryBtn.addEventListener("click", loadAdminHistory);
+  els.searchMyReports?.addEventListener("input", () => {
+    renderMyReports(filterByQuery(cachedMyReports, els.searchMyReports.value, [r => r.cycle, r => r.marketer]));
+  });
+  els.searchAdminCycles?.addEventListener("input", () => {
+    renderAdminCycles(filterByQuery(cachedAdminCycles, els.searchAdminCycles.value, [
+      r => r.cycle,
+      r => (r.filled || []).map(m => `${m.name} ${m.username}`).join(" "),
+      r => (r.missing || []).map(m => `${m.name} ${m.username}`).join(" "),
+    ]));
+  });
+  els.searchAdminHistory?.addEventListener("input", () => {
+    renderAdminHistory(filterByQuery(cachedAdminHistory, els.searchAdminHistory.value, [
+      r => r.cycle, r => r.marketer, r => r.username
+    ]));
+  });
+  if (useNativeMainButton) {
+    tg.MainButton.onClick(submitForm);
+    els.submitBtn.classList.add("hidden");
+  }
 }
 
 async function init() {
@@ -835,6 +928,10 @@ async function init() {
   wireEvents();
   if (!loadDraft()) addGeoRow();
   await loadContext();
+  // Show MainButton if we ended up on the form view
+  if (document.getElementById("view-new-report")?.classList.contains("active")) {
+    showMainButton(state.editMode ? "Сохранить" : "Отправить");
+  }
 }
 
 init();
