@@ -498,6 +498,7 @@ body.app-denied .boot-denied{display:block}
 .toast.out{animation:toast-out .2s ease forwards}
 .toast-success{border-color:var(--success);background:linear-gradient(var(--success-soft),var(--success-soft)),var(--surface)}
 .toast-error{border-color:var(--danger);background:linear-gradient(var(--danger-soft),var(--danger-soft)),var(--surface)}
+.toast-warning{border-color:var(--warning);background:linear-gradient(var(--warning-soft),var(--warning-soft)),var(--surface)}
 @keyframes toast-in{to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{to{opacity:0;transform:translateY(-8px)}}
 

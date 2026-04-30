@@ -214,7 +214,11 @@ function loadDraft() {
 
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
-  toast.className = "toast" + (type === "error" ? " toast-error" : type === "success" ? " toast-success" : "");
+  const cls = type === "error" ? " toast-error"
+    : type === "success" ? " toast-success"
+    : type === "warning" ? " toast-warning"
+    : "";
+  toast.className = "toast" + cls;
   toast.textContent = message;
   els.toastContainer.appendChild(toast);
   setTimeout(() => {
@@ -494,9 +498,15 @@ async function submitForm() {
       ? await apiCall("save_report_edit", payload)
       : await submitNewReport(payload);
     if (result && result.ok === false) {
-      showToast(result.message || "Не удалось сохранить", "error");
-      els.submitBtn.textContent = finishedText;
-      haptic("error");
+      if (result.no_change) {
+        showToast(result.message || "Без изменений", "warning");
+        els.submitBtn.textContent = finishedText;
+        haptic("warning");
+      } else {
+        showToast(result.message || "Не удалось сохранить", "error");
+        els.submitBtn.textContent = finishedText;
+        haptic("error");
+      }
     } else {
       const wasEdit = state.editMode;
       showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
