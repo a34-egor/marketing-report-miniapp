@@ -525,20 +525,21 @@ async function openReportForEdit(reportKey, marketerInfo = null) {
       showToast(data?.message || "Отчёт не найден", "error");
       return;
     }
-    // If marketerInfo not passed but data has it, build from response
-    const info = marketerInfo || (data.marketer || data.username ? {
-      name: data.marketer || "",
-      username: data.username || ""
-    } : null);
-    // For self-edit, drop marketer label (it's their own report)
-    const isSelf = info && state.telegram_id && data.telegram_id &&
-                   String(state.telegram_id) === String(data.telegram_id);
+    // Prefer click-source info; fall back to whatever the report itself carries
+    const info = (marketerInfo && (marketerInfo.name || marketerInfo.username))
+      ? marketerInfo
+      : (data.marketer || data.username
+          ? { name: data.marketer || "", username: data.username || "" }
+          : null);
+    // For admin/superadmin always show marketer; for marketer editing own report info is null
+    const isAdminLike = state.role === "admin" || state.role === "superadmin";
+    const showInfo = isAdminLike ? info : null;
     els.cycle.value = data.cycle || "";
     els.geoList.innerHTML = "";
     const items = Array.isArray(data.items) ? data.items : [];
     if (items.length) items.forEach(it => addGeoRow(it));
     else addGeoRow();
-    setEditMode(true, data.report_key || reportKey, isSelf ? null : info);
+    setEditMode(true, data.report_key || reportKey, showInfo);
     switchTab("new-report");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e) {
