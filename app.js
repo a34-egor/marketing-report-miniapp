@@ -559,7 +559,11 @@ function renderAdminCycles(rows) {
       return escapeHtml(m.name || m.telegram_id || "—");
     };
     const filledHtml = filled.length
-      ? filled.map(m => `<div class="status-row status-filled"><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`).join("")
+      ? filled.map(m => {
+          const rk = m.report_key || "";
+          const editable = rk ? ` data-edit-report="${escapeHtml(rk)}" role="button" tabindex="0"` : "";
+          return `<div class="status-row status-filled${rk ? ' status-clickable' : ''}"${editable}><span class="status-mark">✅</span><span>${renderName(m)}</span></div>`;
+        }).join("")
       : '<div class="status-row status-empty">— никто</div>';
     const missingHtml = missing.length
       ? missing.map(m => `<div class="status-row status-missing"><span class="status-mark">❌</span><span>${renderName(m)}</span></div>`).join("")
@@ -597,6 +601,13 @@ function renderAdminCycles(rows) {
     `;
     const jiraBtn = card.querySelector(".jira-link");
     if (jiraBtn) jiraBtn.addEventListener("click", () => openExternal(jiraBtn.dataset.url));
+    card.querySelectorAll("[data-edit-report]").forEach(el => {
+      el.addEventListener("click", (e) => {
+        if (e.target.closest(".tg-link")) return; // username link → TG chat, not edit
+        const rk = el.dataset.editReport;
+        if (rk) openReportForEdit(rk);
+      });
+    });
     els.adminCyclesList.appendChild(card);
   });
 }
