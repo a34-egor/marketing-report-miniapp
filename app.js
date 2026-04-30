@@ -498,19 +498,19 @@ async function submitForm() {
       ? await apiCall("save_report_edit", payload)
       : await submitNewReport(payload);
     if (result && result.ok === false) {
-      if (result.no_change) {
-        showToast(result.message || "Без изменений", "warning");
-        els.submitBtn.textContent = finishedText;
-        haptic("warning");
-      } else {
-        showToast(result.message || "Не удалось сохранить", "error");
-        els.submitBtn.textContent = finishedText;
-        haptic("error");
-      }
+      showToast(result.message || "Не удалось сохранить", "error");
+      els.submitBtn.textContent = finishedText;
+      haptic("error");
     } else {
       const wasEdit = state.editMode;
-      showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
-      haptic("success");
+      const noChange = !!(result && result.no_change);
+      if (noChange) {
+        showToast(result.message || "Без изменений", "warning");
+        haptic("warning");
+      } else {
+        showToast(wasEdit ? "Изменения сохранены" : "Отчёт отправлен", "success");
+        haptic("success");
+      }
       if (!wasEdit) clearDraft();
       resetForm();
       // Admin doesn't have "Мои отчёты" — send back to Циклы
