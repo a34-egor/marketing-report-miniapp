@@ -936,25 +936,96 @@ function wireEvents() {
     tg.MainButton.onClick(submitForm);
     els.submitBtn.classList.add("hidden");
   }
+
+  // GEO autocomplete: focus / input / blur on any .geo-input
+  document.addEventListener("focusin", (e) => {
+    const inp = e.target.closest(".geo-input");
+    if (!inp) return;
+    showSuggestions(inp);
+  });
+  document.addEventListener("input", (e) => {
+    const inp = e.target.closest(".geo-input");
+    if (!inp) return;
+    showSuggestions(inp);
+  });
+  document.addEventListener("focusout", (e) => {
+    const inp = e.target.closest(".geo-input");
+    if (!inp) return;
+    setTimeout(hideSuggestions, 120); // allow click on suggestion to register
+  });
+  // Click on a suggestion (mousedown so it fires before input blur)
+  const sugBox = document.getElementById("geoSuggestions");
+  if (sugBox) {
+    sugBox.addEventListener("mousedown", (e) => {
+      const item = e.target.closest(".geo-suggestion-item");
+      if (!item) return;
+      e.preventDefault();
+      pickSuggestion(item.dataset.value);
+    });
+  }
 }
 
-function populateCountryList() {
-  const dl = document.getElementById("countries-list");
-  if (!dl || !window.GEO_CANONICAL) return;
-  if (dl.children.length) return; // already populated
-  const frag = document.createDocumentFragment();
-  for (const name of window.GEO_CANONICAL) {
-    const opt = document.createElement("option");
-    opt.value = name;
-    frag.appendChild(opt);
+function getCountryList() {
+  return Array.isArray(window.GEO_CANONICAL) ? window.GEO_CANONICAL : [];
+}
+function nameOnly(canonical) {
+  // "🇩🇪 Германия" → "Германия"
+  const space = canonical.indexOf(" ");
+  return space > 0 ? canonical.slice(space + 1) : canonical;
+}
+function filterCountries(query) {
+  const list = getCountryList();
+  const q = String(query || "").toLowerCase().trim();
+  if (!q) return list.slice(0, 8);
+  const startsWith = [];
+  const contains = [];
+  for (const c of list) {
+    const lcName = nameOnly(c).toLowerCase();
+    if (lcName.startsWith(q)) startsWith.push(c);
+    else if (lcName.includes(q)) contains.push(c);
   }
-  dl.appendChild(frag);
+  startsWith.sort((a, b) => nameOnly(a).localeCompare(nameOnly(b)));
+  contains.sort((a, b) => nameOnly(a).localeCompare(nameOnly(b)));
+  return [...startsWith, ...contains].slice(0, 8);
+}
+
+let suggestionsTarget = null;
+function positionSuggestions(input) {
+  const box = document.getElementById("geoSuggestions");
+  if (!box) return;
+  const r = input.getBoundingClientRect();
+  box.style.left = `${r.left + window.scrollX}px`;
+  box.style.top = `${r.bottom + window.scrollY + 4}px`;
+  box.style.width = `${r.width}px`;
+}
+function showSuggestions(input) {
+  const box = document.getElementById("geoSuggestions");
+  if (!box) return;
+  suggestionsTarget = input;
+  const matches = filterCountries(input.value);
+  if (!matches.length) { hideSuggestions(); return; }
+  box.innerHTML = matches.map(c =>
+    `<div class="geo-suggestion-item" data-value="${escapeHtml(c)}">${escapeHtml(c)}</div>`
+  ).join("");
+  positionSuggestions(input);
+  box.classList.remove("hidden");
+}
+function hideSuggestions() {
+  const box = document.getElementById("geoSuggestions");
+  if (box) box.classList.add("hidden");
+  suggestionsTarget = null;
+}
+function pickSuggestion(value) {
+  if (!suggestionsTarget) return;
+  suggestionsTarget.value = value;
+  suggestionsTarget.dispatchEvent(new Event("input", { bubbles: true }));
+  suggestionsTarget.focus();
+  hideSuggestions();
 }
 
 async function init() {
   readTelegramUser();
   renderUserPill();
-  populateCountryList();
   wireEvents();
   if (!loadDraft()) addGeoRow();
   await loadContext();
