@@ -791,13 +791,21 @@ function renderAdminHistory(rows) {
     const itemsHtml = items.length
       ? `<div class="report-items diff-items">${items.map(renderItem).join("")}</div>`
       : "";
-    const tgLink = r.username
-      ? `<a class="tg-link" data-tg="${escapeHtml(r.username)}" href="https://t.me/${escapeHtml(r.username)}">@${escapeHtml(r.username)}</a>`
-      : "";
-    let whoHtml;
-    if (r.marketer && r.username) whoHtml = `${escapeHtml(r.marketer)} (${tgLink})`;
-    else if (r.username) whoHtml = tgLink;
-    else whoHtml = escapeHtml(r.marketer || r.telegram_id || "—");
+    function personHtml(name, username, tid) {
+      const link = username
+        ? `<a class="tg-link" data-tg="${escapeHtml(username)}" href="https://t.me/${escapeHtml(username)}">@${escapeHtml(username)}</a>`
+        : "";
+      if (name && username) return `${escapeHtml(name)} (${link})`;
+      if (username) return link;
+      return escapeHtml(name || tid || "—");
+    }
+    const ownerHtml = personHtml(r.owner_name, r.owner_username, r.owner_telegram_id);
+    const editorHtml = personHtml(r.editor_name || r.marketer, r.editor_username || r.username, r.editor_telegram_id || r.telegram_id);
+    const isAdminEdit = !!r.is_admin_edit;
+    const metaHtml = isAdminEdit
+      ? `<div class="meta-row"><span><b>Маркетолог:</b> ${ownerHtml}</span></div>
+         <div class="meta-row"><span><b>Редактировал:</b> ${editorHtml}</span></div>`
+      : `<div class="meta-row"><span>${ownerHtml || editorHtml}</span></div>`;
     const versionBadge = r.has_prev
       ? `<span class="badge badge-neutral">v${Number(r.version) || ""}</span>`
       : `<span class="badge">Первая версия</span>`;
@@ -808,9 +816,7 @@ function renderAdminHistory(rows) {
         <h3>Цикл ${escapeHtml(r.cycle)} ${versionBadge}</h3>
         <span class="meta-stamp">${escapeHtml(formatDateTimeShort(r.updated_at))}</span>
       </div>
-      <div class="meta-row">
-        <span>${whoHtml}</span>
-      </div>
+      ${metaHtml}
       <div class="kpi-row kpi-row-3">
         <div class="kpi"><span>ГЕО</span><strong>${Number(r.total_geo) || 0}</strong></div>
         <div class="kpi"><span>Расход</span><strong>${formatMoney(r.total_spend)}</strong></div>
