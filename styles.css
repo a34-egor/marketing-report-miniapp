@@ -115,7 +115,7 @@ input,textarea{
   width:100%;border:1px solid var(--line);
   background:var(--surface-2);color:var(--text);
   border-radius:var(--radius-md);
-  padding:11px 13px;font-size:15px;font-family:inherit;
+  padding:11px 13px;font-size:16px;font-family:inherit;
   outline:none;appearance:none;-webkit-appearance:none;
   transition:border-color .15s ease, box-shadow .15s ease;
 }
@@ -164,7 +164,7 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
   font-size:11px;font-weight:600;color:var(--muted);
   margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em
 }
-.geo-metric input{padding:9px 11px;font-size:14px;border-radius:var(--radius-sm)}
+.geo-metric input{padding:9px 11px;font-size:16px;border-radius:var(--radius-sm)}
 .geo-metric-readonly .avg-output{
   display:flex;align-items:center;justify-content:center;
   padding:9px 11px;
@@ -278,7 +278,7 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
   border-radius:var(--radius-md);
   padding:8px 12px;
   color:var(--text);
-  font-family:inherit;font-size:13px;
+  font-family:inherit;font-size:16px;
   outline:none;
   transition:border-color .15s
 }
