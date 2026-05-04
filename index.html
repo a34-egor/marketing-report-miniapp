@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Marketing Report</title>
   <meta name="theme-color" content="#0a0f1c" />
-  <link rel="stylesheet" href="./styles.css?v=234" />
+  <link rel="stylesheet" href="./styles.css?v=235" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="app-loading">
@@ -115,11 +115,13 @@
     </main>
   </div>
 
+  <datalist id="countries-list"></datalist>
+
   <template id="geoTemplate">
     <article class="geo-item">
       <div class="geo-top">
         <span class="geo-number">#1</span>
-        <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" />
+        <input class="geo-input" type="text" placeholder="🇸🇬 Название ГЕО" list="countries-list" autocomplete="off" />
         <button type="button" class="remove-geo btn-icon-close" aria-label="Удалить">×</button>
       </div>
 
@@ -145,6 +147,7 @@
     </article>
   </template>
 
-  <script src="./app.js?v=234"></script>
+  <script src="./countries.js?v=235"></script>
+  <script src="./app.js?v=235"></script>
 </body>
 </html>

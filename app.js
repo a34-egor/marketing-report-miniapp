@@ -938,9 +938,23 @@ function wireEvents() {
   }
 }
 
+function populateCountryList() {
+  const dl = document.getElementById("countries-list");
+  if (!dl || !window.GEO_CANONICAL) return;
+  if (dl.children.length) return; // already populated
+  const frag = document.createDocumentFragment();
+  for (const name of window.GEO_CANONICAL) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    frag.appendChild(opt);
+  }
+  dl.appendChild(frag);
+}
+
 async function init() {
   readTelegramUser();
   renderUserPill();
+  populateCountryList();
   wireEvents();
   if (!loadDraft()) addGeoRow();
   await loadContext();
