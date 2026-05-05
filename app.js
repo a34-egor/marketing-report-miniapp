@@ -998,17 +998,29 @@ function positionSuggestions(input) {
   box.style.top = `${r.bottom + window.scrollY + 4}px`;
   box.style.width = `${r.width}px`;
 }
+let suggestionsRafScheduled = false;
+let lastSuggestionsKey = "";
 function showSuggestions(input) {
-  const box = document.getElementById("geoSuggestions");
-  if (!box) return;
   suggestionsTarget = input;
-  const matches = filterCountries(input.value);
-  if (!matches.length) { hideSuggestions(); return; }
-  box.innerHTML = matches.map(c =>
-    `<div class="geo-suggestion-item" data-value="${escapeHtml(c)}">${escapeHtml(c)}</div>`
-  ).join("");
-  positionSuggestions(input);
-  box.classList.remove("hidden");
+  if (suggestionsRafScheduled) return;
+  suggestionsRafScheduled = true;
+  requestAnimationFrame(() => {
+    suggestionsRafScheduled = false;
+    if (!suggestionsTarget) return;
+    const box = document.getElementById("geoSuggestions");
+    if (!box) return;
+    const matches = filterCountries(suggestionsTarget.value);
+    if (!matches.length) { hideSuggestions(); return; }
+    const key = matches.join("");
+    if (key !== lastSuggestionsKey) {
+      lastSuggestionsKey = key;
+      box.innerHTML = matches.map(c =>
+        `<div class="geo-suggestion-item" data-value="${escapeHtml(c)}">${escapeHtml(c)}</div>`
+      ).join("");
+    }
+    positionSuggestions(suggestionsTarget);
+    box.classList.remove("hidden");
+  });
 }
 function hideSuggestions() {
   const box = document.getElementById("geoSuggestions");
