@@ -108,6 +108,7 @@ h3{font-size:15px;font-weight:700}
   margin-bottom:12px;min-height:28px
 }
 .section-head h2, .section-head h3{flex:1;min-width:0}
+.section-actions{display:flex;gap:6px;flex-shrink:0}
 
 /* Inputs */
 label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em}
@@ -342,6 +343,32 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--shadow-fo
   border:1px dashed var(--line);
   border-radius:var(--radius-md);
   color:var(--muted);text-align:center;font-size:13px
+}
+
+/* Skeleton loaders for list views */
+.skeleton-card{
+  position:relative;overflow:hidden;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  padding:14px;
+  display:grid;gap:10px;
+}
+.skeleton-card + .skeleton-card{margin-top:10px}
+.skeleton-line{
+  height:12px;border-radius:6px;
+  background:var(--surface-2);
+}
+.skeleton-line-tall{height:18px}
+.skeleton-card::after{
+  content:"";
+  position:absolute;inset:0;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  transform:translateX(-100%);
+  animation:skeleton-shimmer 1.4s infinite;
+}
+@keyframes skeleton-shimmer{
+  100% { transform: translateX(100%); }
 }
 
 /* Boot screen — covers everything until role resolves */

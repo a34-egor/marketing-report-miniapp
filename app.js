@@ -44,6 +44,7 @@ const els = {
   tabs: $("topTabs"),
   newReportTab: $("newReportTab"),
   myReportsTab: $("myReportsTab"),
+  copyPrevGeoBtn: $("copyPrevGeoBtn"),
   adminCyclesTab: $("adminCyclesTab"),
   adminHistoryTab: $("adminHistoryTab"),
   formTitle: $("formTitle"),
@@ -133,6 +134,16 @@ function formatDateTimeShort(iso) {
   return `${dd}.${mm} ${hh}:${mi}`;
 }
 
+const SKELETON_LIST_HTML = (() => {
+  const card = `
+    <div class="skeleton-card">
+      <div class="skeleton-line" style="width:35%"></div>
+      <div class="skeleton-line skeleton-line-tall" style="width:60%"></div>
+      <div class="skeleton-line" style="width:80%"></div>
+    </div>`;
+  return card.repeat(3);
+})();
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -165,6 +176,39 @@ function draftKey() {
   return state.telegram_id ? `${DRAFT_KEY_PREFIX}${state.telegram_id}` : null;
 }
 
+// Storage abstraction — Telegram CloudStorage when in TG (cross-device sync),
+// localStorage as fallback for browser preview.
+const useCloudStorage = !!(tg && tg.CloudStorage);
+function storageGet(key) {
+  return new Promise((resolve) => {
+    if (useCloudStorage) {
+      tg.CloudStorage.getItem(key, (err, value) => resolve(err ? null : (value || null)));
+    } else {
+      try { resolve(localStorage.getItem(key)); } catch { resolve(null); }
+    }
+  });
+}
+function storageSet(key, value) {
+  return new Promise((resolve) => {
+    if (useCloudStorage) {
+      tg.CloudStorage.setItem(key, value, () => resolve());
+    } else {
+      try { localStorage.setItem(key, value); } catch {}
+      resolve();
+    }
+  });
+}
+function storageRemove(key) {
+  return new Promise((resolve) => {
+    if (useCloudStorage) {
+      tg.CloudStorage.removeItem(key, () => resolve());
+    } else {
+      try { localStorage.removeItem(key); } catch {}
+      resolve();
+    }
+  });
+}
+
 function saveDraft() {
   if (state.editMode) return;
   const key = draftKey();
@@ -173,10 +217,8 @@ function saveDraft() {
   const items = collectItems();
   const hasContent = cycle ||
     items.some(it => it.geo || it.spend || it.pdp || it.next_cycle_plan);
-  try {
-    if (!hasContent) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify({ cycle, items, saved_at: Date.now() }));
-  } catch {}
+  if (!hasContent) storageRemove(key);
+  else storageSet(key, JSON.stringify({ cycle, items, saved_at: Date.now() }));
 }
 
 function scheduleSaveDraft() {
@@ -186,17 +228,16 @@ function scheduleSaveDraft() {
 
 function clearDraft() {
   const key = draftKey();
-  if (!key) return;
-  try { localStorage.removeItem(key); } catch {}
+  if (key) storageRemove(key);
 }
 
-function loadDraft() {
+async function loadDraft() {
   if (state.editMode) return false;
   const key = draftKey();
   if (!key) return false;
   let draft = null;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = await storageGet(key);
     if (raw) draft = JSON.parse(raw);
   } catch {}
   if (!draft) return false;
@@ -387,6 +428,8 @@ function setEditMode(on, reportKey = null, marketerInfo = null) {
     els.formTitle.textContent = on ? "Редактирование отчёта" : "Новый отчёт";
   }
   els.submitBtn.textContent = on ? "Сохранить" : "Отправить";
+  // Hide "copy from previous" button when editing existing report
+  if (els.copyPrevGeoBtn) els.copyPrevGeoBtn.classList.toggle("hidden", on);
   // Sync MainButton text if visible
   if (useNativeMainButton && document.getElementById("view-new-report")?.classList.contains("active")) {
     showMainButton(on ? "Сохранить" : "Отправить");
@@ -540,8 +583,46 @@ function filterByQuery(rows, q, fields) {
   }));
 }
 
+async function copyPrevCycleGeo() {
+  // Need user's reports — fetch fresh if cache empty
+  let reports = cachedMyReports;
+  if (!reports || !reports.length) {
+    try {
+      const data = await apiCall("get_my_reports");
+      reports = Array.isArray(data?.reports) ? data.reports : [];
+      cachedMyReports = reports;
+    } catch (e) {
+      showToast(`Не удалось получить отчёты: ${e.message}`, "error");
+      return;
+    }
+  }
+  if (!reports.length) {
+    showToast("Нет прошлых отчётов для копирования", "warning");
+    return;
+  }
+  // Pick most recent numeric cycle (or latest by updated_at as fallback)
+  const sorted = [...reports].sort((a, b) => {
+    const an = Number(a.cycle), bn = Number(b.cycle);
+    if (Number.isFinite(an) && Number.isFinite(bn)) return bn - an;
+    return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
+  });
+  const prev = sorted[0];
+  const items = Array.isArray(prev.items) ? prev.items : [];
+  if (!items.length) {
+    showToast("В прошлом отчёте нет ГЕО", "warning");
+    return;
+  }
+  if (!confirm(`Скопировать ${items.length} ГЕО из цикла ${prev.cycle}? Текущая структура заменится. Цифры и план переписываются вручную.`)) return;
+  els.geoList.innerHTML = "";
+  // Add only the geo names — empty spend/pdp/plan
+  for (const it of items) addGeoRow({ geo: it.geo || "" });
+  scheduleSaveDraft();
+  showToast(`Скопировано ${items.length} ГЕО из цикла ${prev.cycle}`, "success");
+  haptic("success");
+}
+
 async function loadMyReports() {
-  els.myReportsList.innerHTML = '<div class="empty-state">Загрузка…</div>';
+  els.myReportsList.innerHTML = SKELETON_LIST_HTML;
   try {
     const data = await apiCall("get_my_reports");
     const rows = Array.isArray(data?.reports) ? data.reports : (Array.isArray(data) ? data : []);
@@ -624,7 +705,7 @@ async function openReportForEdit(reportKey, marketerInfo = null) {
 }
 
 async function loadAdminCycles() {
-  els.adminCyclesList.innerHTML = '<div class="empty-state">Загрузка…</div>';
+  els.adminCyclesList.innerHTML = SKELETON_LIST_HTML;
   try {
     const data = await apiCall("get_admin_cycles");
     if (data && data.ok === false) {
@@ -725,7 +806,7 @@ function renderAdminCycles(rows) {
 }
 
 async function loadAdminHistory() {
-  els.adminHistoryList.innerHTML = '<div class="empty-state">Загрузка…</div>';
+  els.adminHistoryList.innerHTML = SKELETON_LIST_HTML;
   try {
     const data = await apiCall("get_admin_history");
     if (data && data.ok === false) {
@@ -903,6 +984,7 @@ function wireEvents() {
   });
   els.cycle.addEventListener("input", scheduleSaveDraft);
   els.addGeoBtn.addEventListener("click", () => { addGeoRow(); scheduleSaveDraft(); });
+  els.copyPrevGeoBtn?.addEventListener("click", copyPrevCycleGeo);
   els.resetBtn.addEventListener("click", () => {
     if (state.editMode && !confirm("Выйти из режима редактирования без сохранения?")) return;
     const wasEditing = state.editMode;
@@ -1039,7 +1121,7 @@ async function init() {
   readTelegramUser();
   renderUserPill();
   wireEvents();
-  if (!loadDraft()) addGeoRow();
+  if (!await loadDraft()) addGeoRow();
   await loadContext();
   // Show MainButton if we ended up on the form view
   if (document.getElementById("view-new-report")?.classList.contains("active")) {
