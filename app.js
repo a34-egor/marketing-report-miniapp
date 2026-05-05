@@ -573,6 +573,7 @@ async function submitForm() {
 let cachedMyReports = [];
 let cachedAdminCycles = [];
 let cachedAdminHistory = [];
+let myReportsPrefetch = null;
 
 function filterByQuery(rows, q, fields) {
   const s = String(q || "").toLowerCase().trim();
@@ -584,8 +585,11 @@ function filterByQuery(rows, q, fields) {
 }
 
 async function copyPrevCycleGeo() {
-  // Need user's reports — fetch fresh if cache empty
+  // Use cached results, prefer awaiting the in-flight prefetch over a fresh call
   let reports = cachedMyReports;
+  if ((!reports || !reports.length) && myReportsPrefetch) {
+    try { await myReportsPrefetch; reports = cachedMyReports; } catch {}
+  }
   if (!reports || !reports.length) {
     try {
       const data = await apiCall("get_my_reports");
@@ -1123,6 +1127,12 @@ async function init() {
   readTelegramUser();
   renderUserPill();
   wireEvents();
+  // Prefetch own reports in the background so "↻ Из прошлого" feels instant
+  if (state.telegram_id) {
+    myReportsPrefetch = apiCall("get_my_reports").then(data => {
+      cachedMyReports = Array.isArray(data?.reports) ? data.reports : [];
+    }).catch(() => null);
+  }
   if (!await loadDraft()) addGeoRow();
   await loadContext();
   // Show MainButton if we ended up on the form view
