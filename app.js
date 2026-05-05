@@ -617,7 +617,10 @@ async function copyPrevCycleGeo() {
   // Add only the geo names — empty spend/pdp/plan
   for (const it of items) addGeoRow({ geo: it.geo || "" });
   scheduleSaveDraft();
-  showToast(`Скопировано ${items.length} ГЕО из цикла ${prev.cycle}`, "success");
+  const names = items.map(it => String(it.geo || "").trim()).filter(Boolean);
+  const shown = names.slice(0, 8).join(", ");
+  const more = names.length > 8 ? ` и ещё ${names.length - 8}` : "";
+  showToast(`Скопировано из цикла ${prev.cycle}: ${shown}${more}`, "success");
   haptic("success");
 }
 
