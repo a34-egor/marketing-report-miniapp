@@ -623,7 +623,7 @@ async function copyPrevCycleGeo() {
   els.geoList.innerHTML = "";
   for (const it of items) addGeoRow({ geo: it.geo || "" });
   scheduleSaveDraft();
-  showToast(`Скопировано ${items.length} ГЕО из цикла ${prev.cycle}`, "success");
+  showToast(`Скопировано из цикла ${prev.cycle}: ${shown}${more}`, "success");
   haptic("success");
 }
 
