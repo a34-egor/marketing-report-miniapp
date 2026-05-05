@@ -615,7 +615,7 @@ async function copyPrevCycleGeo() {
   const names = items.map(it => String(it.geo || "").trim()).filter(Boolean);
   const shown = names.slice(0, 8).join(", ");
   const more = names.length > 8 ? ` и ещё ${names.length - 8}` : "";
-  if (!confirm(`Скопировать ${items.length} ГЕО из цикла ${prev.cycle}: ${shown}${more}?\n\nТекущая структура заменится. Цифры и план переписываются вручную.`)) return;
+  if (!confirm(`Скопировать ${items.length} ГЕО из цикла ${prev.cycle}:\n${shown}${more}?\n\nТекущая структура заменится. Цифры и план переписываются вручную.`)) return;
   els.geoList.innerHTML = "";
   for (const it of items) addGeoRow({ geo: it.geo || "" });
   scheduleSaveDraft();
